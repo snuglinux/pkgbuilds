@@ -13,8 +13,6 @@ makedepends=('unzip')
 
 source=("https://github.com/seppius-xbmc-repo/ru/raw/master/repository.search.db/repository.search.db-${pkgver}.zip")
 
-installpath=/var/lib/kodi/.kodi/addons/
-
 prepare() {
   cd ${srcdir}
   unzip -o repository.search.db-${pkgver}.zip
