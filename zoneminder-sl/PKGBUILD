@@ -1,0 +1,143 @@
+pkgbase=zoneminder
+pkgname=$pkgbase-sl
+pkgver=1.32.2
+pkgrel=3
+pkgdesc='A full-featured, open source, state-of-the-art video surveillance software system'
+arch=('x86_64')
+url='https://zoneminder.com/'
+license=('GPL2')
+depends=('polkit' 'ffmpeg' 'libmp4v2'
+         # Remove the following line if you want to install ZoneMinder without a local database server, e.g. as part of a Multi-Server setup
+         'mariadb'
+         # Remove the following line if you don't need Nginx
+         'nginx-mainline' 'fcgiwrap' 'spawn-fcgi' 'multiwatch'
+         'php-apcu' 'php-fpm' 'php-gd'
+         'perl-archive-zip' 'perl-data-dump' 'perl-date-manip' 'perl-dbd-mysql' 'perl-device-serialport' 'perl-file-slurp' 'perl-image-info'
+         'perl-json-any' 'perl-libwww' 'perl-mime-lite' 'perl-mime-tools' 'perl-number-bytes-human' 'perl-sys-meminfo' 'perl-sys-mmap'
+         # Needed for ONVIF support
+         'perl-class-load' 'perl-data-uuid' 'perl-io-socket-multicast' 'perl-soap-wsdl' 'perl-xml-parser'
+         # Needed for SSL support
+         'perl-lwp-protocol-https'
+         # Apparently needed for Telemetry support
+         'perl-json-maybexs'
+         # Unverified dependencies. So far not installing them hasn't raised any red flags, but I can't be 100% sure whether they're leftovers from previous ZoneMinder incarnations or if they're needed for proper operation during runtime, so for the time being I'm leaving them in.
+         'perl-net-sftp-foreign' 'perl-php-serialization' 'perl-sys-cpu' 'perl-uri-encode')
+makedepends=('cmake')
+optdepends=('apache: alternative web server'
+            'vlc: provides libvlc (may achieve better performance with some cameras)'
+            'ffmpeg-full: provides libavresample (dropped from the official ffmpeg package)')
+conflicts=('zoneminder' 'zoneminder-git')
+backup=("etc/zoneminder/zm.conf"
+        "etc/nginx/sites-available/$pkgbase.conf"
+        "etc/httpd/conf/extra/$pkgbase.conf")
+install=$pkgbase.install
+source=("https://github.com/ZoneMinder/ZoneMinder/archive/$pkgver.tar.gz"
+        "https://github.com/FriendsOfCake/crud/archive/v3.2.0.tar.gz"
+        "https://github.com/ZoneMinder/CakePHP-Enum-Behavior/archive/1.0-zm.tar.gz"
+        "zoneminder-nginx.conf"
+        "zoneminder-httpd.conf"
+        "zoneminder-php.ini"
+        "zoneminder.service"
+        "zoneminder-tmpfile.conf"
+        "fcgiwrap-multiwatch.service")
+sha256sums=('cf72cbd45d91ef0232c123dac5f908993f8941a62b9ae96975c4e6043bd4b9a9'
+            '55be29e1eccb44d4ad0db8b23c37cec50f5341f8e498583d472ed1f0493876e3'
+            'dbd231e97b950c698f0f501d6a53c7291c9985e766b09e3afe00cfe69a969f44'
+            # zoneminder-nginx.conf
+            'b9d5694e12db2d79701769cb93a178e99d1a4c52c1c98ecdc7edaf8ede4b6820'
+            # zoneminder-httpd.conf
+            '1944e27db3b17edac152209b2b35e914ed9700a2ffe0255b012661197a328178'
+            # zoneminder-php.ini
+            '7905ceddbb049de0f9bf4f1eb58779dfe310a65c4d2ec44854d592d4f31b6a72'
+            # zoneminder.service
+            '3e4de227e3154dffa887f2286c339ab3cf456f6d74a400b2786192b7e2b129c0'
+            # zoneminder-tmpfile.conf
+            'b69ac1deaaf3cf84b4ae4dbab794e1b062823de817f1e3a816ccf5438db440c0'
+            # fcgiwrap-multiwatch.service
+            'e95f9bef77aef647dd633bd9ad75dc099b6d7184684e133f2f20702de83a6260')
+
+prepare () {
+    cd $pkgbase-$pkgver
+    
+    # Move extra PHP plugins into place
+    cp -R $srcdir/crud-3.2.0/*                          web/api/app/Plugin/Crud
+    cp -R $srcdir/CakePHP-Enum-Behavior-1.0-zm/*        web/api/app/Plugin/CakePHP-Enum-Behavior
+    
+    # Fix the launcher
+    sed -i 's|localhost/zm|localhost:8095|g' misc/$pkgbase.desktop.in
+}
+
+build() {
+    cd $pkgbase-$pkgver
+   
+    cmake -DCMAKE_INSTALL_PREFIX=/usr \
+          -DZM_CONFIG_DIR=/etc/$pkgbase \
+          -DZM_CONFIG_SUBDIR=/etc/$pkgbase/conf.d \
+          -DZM_RUNDIR=/run/$pkgbase \
+          -DZM_SOCKDIR=/run/$pkgbase \
+          -DZM_LOGDIR=/var/log/$pkgbase \
+          -DZM_TMPDIR=/var/tmp/$pkgbase \
+          -DZM_CONTENTDIR=/var/lib/$pkgbase \
+          -DZM_CACHEDIR=/var/lib/$pkgbase/cache \
+          -DZM_WEBDIR=/srv/$pkgbase/www \
+          -DZM_CGIDIR=/srv/$pkgbase/cgi-bin \
+          -DZM_WEB_USER=http .
+
+    make
+}
+     
+package() {
+    cd $pkgbase-$pkgver
+
+    make DESTDIR=$pkgdir install
+    
+    # Set Polkit directory permissions in accordance with Arch policy
+    chmod 750                           $pkgdir/usr/share/polkit-1/rules.d
+    chown root:polkitd                  $pkgdir/usr/share/polkit-1/rules.d
+    
+    # Create ZM_LOGDIR
+    install -dm775 -o http -g http      $pkgdir/var/log/$pkgbase
+    
+    # Create ZM_CONTENTDIR and its subfolders
+    install -dm775 -o http -g http      $pkgdir/var/lib/$pkgbase/{cache,events,images}
+    
+    # Link ZM_CGIDIR and ZM_CACHEDIR inside ZM_WEBDIR and set correct permissions
+    ln -sf /srv/$pkgbase/cgi-bin         $pkgdir/srv/$pkgbase/www
+    ln -sf /var/lib/$pkgbase/cache       $pkgdir/srv/$pkgbase/www
+    chown -Rh http:http                  $pkgdir/srv/$pkgbase
+    
+    # Link ZM_WEBDIR/api/app/tmp to ZM_TMPDIR
+    ln -sf /var/tmp/$pkgbase            $pkgdir/srv/$pkgbase/www/api/app/tmp
+    
+    # Temporary fix for hardcoded /zm/ links (credit goes to @Kubax on AUR)
+    ln -sf /srv/$pkgbase/www            $pkgdir/srv/$pkgbase/www/zm
+    
+    # Set correct permissions for ZM_CONFIG_DIR & ZM_CONFIG_SUBDIR
+    chmod -R 755                        $pkgdir/etc/$pkgbase
+    chmod 644                           $pkgdir/etc/$pkgbase/zm.conf
+    chmod 644                           $pkgdir/etc/$pkgbase/conf.d/*
+
+    # Install Nginx conf file
+    install -Dm644 $srcdir/$pkgbase-nginx.conf              $pkgdir/etc/nginx/sites-available/$pkgbase.conf    
+    
+    # Install Apache conf file
+    install -Dm644 $srcdir/$pkgbase-httpd.conf              $pkgdir/etc/httpd/conf/extra/$pkgbase.conf
+    
+    # Install PHP-FPM ini file
+    install -Dm644 $srcdir/$pkgbase-php.ini                 $pkgdir/etc/php/conf.d/$pkgbase.ini
+    
+    # Install systemd service
+    install -Dm644 $srcdir/$pkgbase.service                 $pkgdir/usr/lib/systemd/system/$pkgbase.service
+    
+    # Install systemd tmpfile
+    install -Dm644 $srcdir/$pkgbase-tmpfile.conf            $pkgdir/usr/lib/tmpfiles.d/$pkgbase.conf
+    
+    # Install fcgiwrap-multiwatch service
+    install -Dm644 $srcdir/fcgiwrap-multiwatch.service     $pkgdir/usr/lib/systemd/system/fcgiwrap-multiwatch.service
+    
+    # Install logrotate conf file
+    install -Dm644 misc/logrotate.conf                      $pkgdir/etc/logrotate.d/$pkgbase
+
+    # Copy default database schemas
+    install -Dm644 db/zm*.sql                               $pkgdir/usr/share/$pkgbase/db
+}

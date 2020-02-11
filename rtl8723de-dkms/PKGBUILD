@@ -1,0 +1,33 @@
+pkgname=rtl8723de-dkms
+_pkgname=${pkgname%-*}
+pkgver=5.0
+pkgrel=1
+pkgdesc="RTL8723 wireless + bluetooth modules (DKMS)"
+arch=('i686' 'x86_64')
+url="https://github.com/smlinux/rtl8723de"
+license=('GPL2')
+depends=('dkms' 'linux-headers')
+
+source=("${url}/archive/$pkgver-up.zip" 
+        "dkms.conf")
+
+md5sums=('7b82d95a863170a491d3958c603e4ac6'
+         '149b43b00951200ae252dc586ef4913e')
+
+build() {
+  cd ${_pkgname}-${pkgver}-up
+}
+
+package() {
+
+  install -dm 755 "${pkgdir}/usr/src"
+  cp -dr --no-preserve=ownership "${srcdir}/${_pkgname}-${pkgver}-up/" "${pkgdir}/usr/src/${_pkgname}-${pkgver}"
+
+  # Copy dkms.conf
+  install -Dm644 dkms.conf "${pkgdir}"/usr/src/${_pkgname}-${pkgver}/dkms.conf
+
+  # Set name and version
+  sed -e "s/@PKGVER@/${pkgver}/" \
+      -i "${pkgdir}"/usr/src/${_pkgname}-${pkgver}/dkms.conf
+
+}

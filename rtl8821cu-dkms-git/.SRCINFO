@@ -1,0 +1,20 @@
+pkgbase = rtl8821cu-dkms-git
+	pkgdesc = rtl8821cu chipset driver
+	pkgver = 5.4.1492ec29cf
+	pkgrel = 3
+	url = https://github.com/smp79/rtl8821CU
+	arch = i686
+	arch = x86_64
+	arch = armv7h
+	license = GPL2
+	makedepends = git
+	depends = dkms
+	depends = bc
+	conflicts = rtl8821cu
+	source = git+https://github.com/smp79/rtl8821CU
+	source = dkms.conf
+	sha256sums = SKIP
+	sha256sums = 6863d28cbb525eab0be7b5244a5b924302516142a1925fc6521ce49a2800b03d
+
+pkgname = rtl8821cu-dkms-git
+

@@ -1,0 +1,24 @@
+# Maintainer: <khvalera@ukr.net>
+
+pkgbase=thunderbird-addon
+pkgname=thunderbird-startupmaster
+pkgver=1.6.5
+pkgrel=1
+pkgdesc="Asks for the master password at startup (fixes multiple password prompt) for Thunderbird"
+arch=('any')
+url="http://www.mozilla.com/"
+license=('GPL3')
+makedepends=('zip')
+depends=('thunderbird')
+options=('!strip' '!libtool' '!staticlibs' '!docs')
+
+source=("https://addons.mozilla.org/firefox/downloads/file/756544/startupmaster-${pkgver}-fx+tb.xpi")
+
+# Don't extract anything
+noextract=(${source})
+
+package() {
+  install -Dm644 startupmaster-${pkgver}-fx+tb.xpi "${pkgdir}/usr/lib/thunderbird/extensions/{506d044e-41fa-4cc8-9dc6-9ff70e96eebf}.xpi"
+}
+
+sha256sums=('95fcf2aefecaa9a62aae7b306fab0c6e7b86e0422ba9bb656ab2c3aa60aaa2f9')
