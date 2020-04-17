@@ -20,7 +20,7 @@ pkgname=("${pkgbase}-common${prefix_distr}"
          "${pkgbase}-storage-python-plugin${prefix_distr}"
          "${pkgbase}-webui${prefix_distr}")
 
-pkgver=19.2.5
+pkgver=19.2.6
 pkgmajor=${pkgver%%.*}
 pkgrel=2
 arch=(i686 x86_64 armv7h aarch64)
@@ -44,6 +44,8 @@ provides=("${pkgbase}")
 prepare() {
   cd ${pkgbase}
   patch --forward --strip=1 --input="../../plattforms-archlinux.patch"
+  # fix: в форме востановления нельзя выбрать задание на восстановление
+  patch --forward --strip=1 --input="../../restore-form.patch"
 }
 
 #=========================================
@@ -547,7 +549,7 @@ package_bareos-webui-sl() {
   ; do
     _cp ${srcdir}/install/$f ${pkgdir}/$f
   done
-  cp ${srcdir}/ru_RU.mo ${pkgdir}/usr/share/webapps/bareos-webui/module/Application/language/ru_RU.mo
-  cp ${srcdir}/ru_RU.po ${pkgdir}/usr/share/webapps/bareos-webui/module/Application/language/ru_RU.po
+  cp ${srcdir}/*.mo ${pkgdir}/usr/share/webapps/bareos-webui/module/Application/language/
+  cp ${srcdir}/*.po ${pkgdir}/usr/share/webapps/bareos-webui/module/Application/language/
   cp ${srcdir}/bootstrap-table-locale-all.min.js ${pkgdir}/usr/share/webapps/bareos-webui/public/js/bootstrap-table-locale-all.min.js
 }
