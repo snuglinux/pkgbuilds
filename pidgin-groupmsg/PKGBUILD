@@ -1,0 +1,31 @@
+pkgname=pidgin-groupmsg
+pkgver=2.2.0
+pkgrel=1
+pkgdesc="GroupMsg - Send an IM to a group of buddies"
+arch=('i686' 'x86_64')
+url="https://bitbucket.org/rekkanoryo/purple-plugin-pack/wiki/Home"
+license=('GPL2')
+depends=('pidgin')
+makedepends=('perl-xml-parser')
+source=(https://bitbucket.org/rekkanoryo/purple-plugin-pack/get/pp_2_2_0.tar.gz)
+md5sums=('fa4f5832dc41199aa184f0325818b4f1')
+
+build() {
+  cd "${srcdir}"/rekkanoryo-purple-plugin-pack-a92697959778
+
+  sed -i -e 's/AM_CONFIG_HEADER/AC_CONFIG_HEADERS/' configure.ac
+  mv groupmsg/.abusive groupmsg/.build
+  ./autogen.sh --prefix=/usr
+
+  # seems to not work if we don't run configure twice
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd "${srcdir}"/rekkanoryo-purple-plugin-pack-a92697959778
+
+  install -dm755 "$pkgdir"/usr/lib/purple-2
+  install -m755 groupmsg/.libs/groupmsg.so "$pkgdir"/usr/lib/purple-2
+}
+
