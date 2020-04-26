@@ -1,0 +1,20 @@
+pkgbase = kurento-media-server
+	pkgdesc = Kurento WebRTC media server
+	pkgver = 6.13.0
+	pkgrel = 1
+	url = https://github.com/Kurento/kurento-media-server
+	arch = any
+	license = apache
+	makedepends = kms-cmake-utils
+	makedepends = websocketpp
+	depends = kms-core
+	depends = boost
+	optdepends = kms-elements
+	optdepends = kms-filters
+	source = git://github.com/Kurento/kurento-media-server.git#tag=6.13.0
+	source = cmake-boost.patch
+	sha256sums = SKIP
+	sha256sums = SKIP
+
+pkgname = kurento-media-server
+
