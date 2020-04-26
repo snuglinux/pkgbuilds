@@ -1,0 +1,95 @@
+# Install guide:
+# http://openmeetings.apache.org/installation.html
+# The early steps are done by this PKGBUILD.
+
+# Original instructions for 1.9.1, some of which may still apply:
+# ==> Please make sure that mysql is reachable via TCP/IP
+# ==> Do this by commenting out the following line in /etc/my.cnf:
+# ==> skip-networking
+#
+# ==> OpenMeetings/red5 also requires you to open the following ports:
+# ==> 5080 8443 1935 8088 9035"
+#
+# ==> Last, please configure your mysql database, user and password at
+# ==> /opt/red5/webapps/openmeetings/WEB-INF/classes/META-INF/persistence.xml
+# ==> Then start mysql and red5. If all went ok, you can access the
+# ==> OpenMeetings installer at http://localhost:5080/openmeetings/install
+
+pkgname=('openmeetings')
+pkgver='5.0.0'
+pkgrel='1'
+_pkgver='M4'
+_rc=''
+pkgdesc='Provides video conferencing, instant messaging, white board, collaborative document editing and other groupware tools. It uses API functions of Media Server for Remoting and Streaming (Red5 or Kurento)'
+arch=('any')
+url='http://openmeetings.apache.org/'
+license=('apache')
+depends=( 'libjpeg' 'imagemagick' 'ghostscript' 'sox' 'lame' 'java-environment-openjdk>=11' 'ffmpeg' 'libreoffice')
+optdepends=('docker' 'kurento-media-server' 'mysql' 'openmeetings-mysql-connector-java')
+makedepends=('curl' 'gcc' 'make' 'libtool' 'bison' 'autoconf' 'automake' 'fakeroot' 'jshon' 'expac' 'mvnvm' 'java-environment-openjdk>=11')
+backup=("opt/openmeetings/webapps/openmeetings/WEB-INF/classes/META-INF/persistence.xml")
+
+# Nothing to strip in a Java package, wastes time!
+options=('!strip')
+install="${pkgname}.install"
+
+source=("https://github.com/apache/openmeetings/archive/${pkgver}-${_pkgver}${_rc}.tar.gz")
+
+sha256sums=('a6d218b807b8f9aee534a93d1dace74aac644cafd7e3ae54a35b267fd4c9c8e0')
+
+package() {
+  # Use a temporary local maven repository.
+  local mvn_repo="${srcdir}/mvn-repository"
+
+  cd "${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}"
+  export JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
+  mvn clean install -Dmaven.repo.local="${mvn_repo}" -PallModules
+
+  install -dm755 ${pkgdir}/opt/openmeetings/webapps/openmeetings/{docs,screenshare}
+  install -dm755 ${pkgdir}/run/openmeetings
+
+  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/target/apache-tomcat-9.0.34/* \
+           ${pkgdir}/opt/openmeetings
+
+  cp -f -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/conf/* \
+           ${pkgdir}/opt/openmeetings/conf
+
+  rm ${pkgdir}/opt/openmeetings/bin/{*.bat,*.tar.gz}
+  rm ${pkgdir}/opt/openmeetings/conf/tomcat-users.*
+
+  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/scripts/*.sh \
+           ${pkgdir}/opt/openmeetings/bin
+
+  find  "${pkgdir}/opt/openmeetings/bin" -name *.sh -print0 | xargs -0 --no-run-if-empty chmod 755
+
+  install -Dpm644 "${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/scripts/openmeetings.service" \
+          -t "${pkgdir}/usr/lib/systemd/system/"
+
+  # Fix openmeetings.service
+  sed -e "s|JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64|JAVA_HOME=/usr/lib/jvm/java-11-openjdk|" \
+      -i "${pkgdir}/usr/lib/systemd/system/openmeetings.service"
+
+  sed -e "s|Group=nogroup|Group=nobody|" \
+      -i "${pkgdir}/usr/lib/systemd/system/openmeetings.service"
+
+  sed -e "s|CATALINA_PID=/var/run/openmeetings.pid|CATALINA_PID=/var/run/openmeetings/openmeetings.pid|" \
+      -i "${pkgdir}/usr/lib/systemd/system/openmeetings.service"
+
+  rm -R ${pkgdir}/opt/openmeetings/webapps/{examples,host-manager,manager,docs,ROOT}
+
+  # install webapps openmeetings
+  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-web/target/openmeetings-web-5.0.0-M4/* \
+           ${pkgdir}/opt/openmeetings/webapps/openmeetings
+
+  # install webapps ROOT
+  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/ROOT \
+           ${pkgdir}/opt/openmeetings/webapps
+
+  # install webapps docs
+  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/target/site/* \
+           ${pkgdir}/opt/openmeetings/webapps/openmeetings/docs
+
+  # install screenshare
+  cp -f -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-screenshare/target/jnlp/* \
+           ${pkgdir}/opt/openmeetings/webapps/openmeetings/screenshare
+}
