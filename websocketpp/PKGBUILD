@@ -1,0 +1,56 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Contributor: Kuba Serafinowski <zizzfizzix(at)gmail(dot)com>
+# Contributor: Daichi Shinozaki <dsdseg@gmail.com>
+# Contributor: skydrome <skydrome@i2pmail.org>
+# Contributor: MTsoul
+
+pkgname=websocketpp
+pkgver=0.8.2
+pkgrel=1
+pkgdesc='C++/Boost Asio based websocket client/server library'
+url='https://www.zaphoyd.com/websocketpp/'
+arch=('any')
+license=('BSD')
+optdepends=(
+  'openssl: TLS socket component support'
+  'asio: alternative asio transport support'
+  'boost: non C++11 environments support'
+  'boost-libs: non C++11 environments support'
+)
+makedepends=('cmake' 'boost' 'boost-libs' 'scons')
+source=(${pkgname}-${pkgver}.tar.gz::https://github.com/zaphoyd/${pkgname}/archive/${pkgver}.tar.gz scons-python3.patch)
+sha512sums=('b2afc63edb69ce81a3a6c06b3d857b3e8820f0e22300ac32bb20ab30ff07bd58bd5ada3e526ed8ab52de934e0e3a26cad2118b0e68ecf3e5e9e8d7101348fd06'
+            '410f51b0920ceba0cf597de5ef953fd4bc11ed440502455997d608dec7f3535e3212e929917c0f54e64914868e9fb3e76c75a39e916708a4d2d9d090d7ed1f41')
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 -i ../scons-python3.patch # Fix build with python3 scons
+}
+
+build() {
+  cd ${pkgname}-${pkgver}
+  WSPP_ENABLE_CPP11=1 \
+    BOOST_LIBS=/usr/lib \
+    BOOST_INCLUDES=/usr/include/boost \
+    scons "${MAKEFLAGS}"
+  (cd build
+    cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+  )
+}
+
+check() {
+  cd ${pkgname}-${pkgver}
+  WSPP_ENABLE_CPP11=1 \
+    BOOST_LIBS=/usr/lib \
+    BOOST_INCLUDES=/usr/include/boost \
+    scons test
+}
+
+package() {
+  cd ${pkgname}-${pkgver}
+  make -C build DESTDIR="${pkgdir}" install
+  install -Dm 644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm 644 readme.md "${pkgdir}/usr/share/doc/${pkgname}/README"
+}
+
+# vim: ts=2 sw=2 et:
