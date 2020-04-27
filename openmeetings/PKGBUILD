@@ -17,15 +17,15 @@
 
 pkgname=('openmeetings')
 pkgver='5.0.0'
-pkgrel='1'
+pkgrel='2'
 _pkgver='M4'
 _rc=''
 pkgdesc='Provides video conferencing, instant messaging, white board, collaborative document editing and other groupware tools. It uses API functions of Media Server for Remoting and Streaming (Red5 or Kurento)'
 arch=('any')
 url='http://openmeetings.apache.org/'
 license=('apache')
-depends=( 'libjpeg' 'imagemagick' 'ghostscript' 'sox' 'ffmpeg' 'lame' 'java-environment-openjdk=11')
-optdepends=('mysql' 'openmeetings-mysql-connector-java' 'libreoffice' 'docker' 'kurento-media-server')
+depends=( 'libjpeg' 'imagemagick' 'ghostscript' 'sox' 'lame' 'java-environment-openjdk=11')
+optdepends=('mysql' 'openmeetings-mysql-connector-java' 'libreoffice' 'ffmpeg' 'docker' 'kurento-media-server')
 makedepends=('curl' 'gcc' 'make' 'libtool' 'bison' 'autoconf' 'automake' 'fakeroot' 'jshon' 'expac' 'mvnvm' 'java-environment-openjdk=11')
 backup=("opt/openmeetings/webapps/openmeetings/WEB-INF/classes/META-INF/persistence.xml")
 
@@ -92,4 +92,12 @@ package() {
   # install screenshare
   cp -f -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-screenshare/target/jnlp/* \
            ${pkgdir}/opt/openmeetings/webapps/openmeetings/screenshare
+
+  # localhost.jks
+  tar -xz -C ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc} -f  \
+             ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/target/apache-openmeetings-${pkgver}-${_pkgver}${_rc}.tar.gz
+
+  cp -f ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/apache-openmeetings-${pkgver}-${_pkgver}${_rc}/conf/localhost.jks \
+        ${pkgdir}/opt/openmeetings/conf/localhost.jks
+
 }
