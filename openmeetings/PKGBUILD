@@ -24,9 +24,9 @@ pkgdesc='Provides video conferencing, instant messaging, white board, collaborat
 arch=('any')
 url='http://openmeetings.apache.org/'
 license=('apache')
-depends=( 'libjpeg' 'imagemagick' 'ghostscript' 'sox' 'lame' 'java-environment-openjdk>=11' 'ffmpeg' 'libreoffice')
-optdepends=('docker' 'kurento-media-server' 'mysql' 'openmeetings-mysql-connector-java')
-makedepends=('curl' 'gcc' 'make' 'libtool' 'bison' 'autoconf' 'automake' 'fakeroot' 'jshon' 'expac' 'mvnvm' 'java-environment-openjdk>=11')
+depends=( 'libjpeg' 'imagemagick' 'ghostscript' 'sox' 'ffmpeg' 'lame' 'java-environment-openjdk=11')
+optdepends=('mysql' 'openmeetings-mysql-connector-java' 'libreoffice' 'docker' 'kurento-media-server')
+makedepends=('curl' 'gcc' 'make' 'libtool' 'bison' 'autoconf' 'automake' 'fakeroot' 'jshon' 'expac' 'mvnvm' 'java-environment-openjdk=11')
 backup=("opt/openmeetings/webapps/openmeetings/WEB-INF/classes/META-INF/persistence.xml")
 
 # Nothing to strip in a Java package, wastes time!
