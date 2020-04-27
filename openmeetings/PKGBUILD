@@ -25,9 +25,10 @@ arch=('any')
 url='http://openmeetings.apache.org/'
 license=('apache')
 depends=( 'libjpeg' 'imagemagick' 'ghostscript' 'sox' 'lame' 'java-environment-openjdk=11')
-optdepends=('mysql' 'openmeetings-mysql-connector-java' 'libreoffice' 'ffmpeg' 'docker' 'kurento-media-server')
+optdepends=('mysql' 'openmeetings-mysql-connector-java' 'libreoffice' 'ffmpeg' 'docker' 'kurento-media-server' 'kms-elements')
 makedepends=('curl' 'gcc' 'make' 'libtool' 'bison' 'autoconf' 'automake' 'fakeroot' 'jshon' 'expac' 'mvnvm' 'java-environment-openjdk=11')
-backup=("opt/openmeetings/webapps/openmeetings/WEB-INF/classes/META-INF/persistence.xml")
+backup=("opt/openmeetings/webapps/openmeetings/WEB-INF/classes/META-INF/persistence.xml"
+        "opt/openmeetings/conf/server.xml")
 
 # Nothing to strip in a Java package, wastes time!
 options=('!strip')
