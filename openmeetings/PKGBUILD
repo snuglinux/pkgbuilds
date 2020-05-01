@@ -1,3 +1,8 @@
+# Maintainer: Chris Severance aur.severach AatT spamgourmet.com
+# Contributor: khvalera ukr.net
+# Contributor: Dmitry Nosachev quartz64 gmail
+# Contributor: Patrick Schneider Patrick.Schneider uni-ulm.de
+
 # Install guide:
 # http://openmeetings.apache.org/installation.html
 # The early steps are done by this PKGBUILD.
@@ -16,25 +21,28 @@
 # ==> OpenMeetings installer at http://localhost:5080/openmeetings/install
 
 pkgname=('openmeetings')
-pkgver='5.0.0'
-pkgrel='2'
-_pkgver='M4'
+_pkgver='5.0.0-M4'
+pkgver="${_pkgver//-/.}"
+pkgrel='3'
 _rc=''
 pkgdesc='Provides video conferencing, instant messaging, white board, collaborative document editing and other groupware tools. It uses API functions of Media Server for Remoting and Streaming (Red5 or Kurento)'
 arch=('any')
 url='http://openmeetings.apache.org/'
 license=('apache')
-depends=( 'libjpeg' 'imagemagick' 'ghostscript' 'sox' 'lame' 'java-environment-openjdk=11')
-optdepends=('mysql' 'openmeetings-mysql-connector-java' 'libreoffice' 'ffmpeg' 'docker' 'kurento-media-server' 'kms-elements')
+depends=( 'libjpeg' 'lame' 'java-environment-openjdk=11')
+optdepends=('imagemagick' 'ghostscript' 'sox' 'libreoffice' 'ffmpeg' 'mysql' 'openmeetings-mysql-connector-java' 'docker' 'kurento-media-server' 'kms-elements')
 makedepends=('curl' 'gcc' 'make' 'libtool' 'bison' 'autoconf' 'automake' 'fakeroot' 'jshon' 'expac' 'mvnvm' 'java-environment-openjdk=11')
 backup=("opt/openmeetings/webapps/openmeetings/WEB-INF/classes/META-INF/persistence.xml"
-        "opt/openmeetings/conf/server.xml")
+        "opt/openmeetings/webapps/openmeetings/WEB-INF/classes/org/apache/openmeetings/web/room/VideoSettings.html"
+        "opt/openmeetings/conf/server.xml"
+        "opt/openmeetings/conf/context.xml"
+        "opt/openmeetings/conf/logging.properties")
 
 # Nothing to strip in a Java package, wastes time!
 options=('!strip')
 install="${pkgname}.install"
 
-source=("https://github.com/apache/openmeetings/archive/${pkgver}-${_pkgver}${_rc}.tar.gz")
+source=("https://github.com/apache/openmeetings/archive/${_pkgver}${_rc}.tar.gz")
 
 sha256sums=('a6d218b807b8f9aee534a93d1dace74aac644cafd7e3ae54a35b267fd4c9c8e0')
 
@@ -42,63 +50,63 @@ package() {
   # Use a temporary local maven repository.
   local mvn_repo="${srcdir}/mvn-repository"
 
-  cd "${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}"
+  cd "${srcdir}/openmeetings-${_pkgver}${_rc}"
   export JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
   mvn clean install -Dmaven.repo.local="${mvn_repo}" -PallModules
 
   install -dm755 ${pkgdir}/opt/openmeetings/webapps/openmeetings/{docs,screenshare}
   install -dm755 ${pkgdir}/run/openmeetings
 
-  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/target/apache-tomcat-9.0.34/* \
+  cp -p -r ${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-server/target/apache-tomcat-9.0.34/* \
            ${pkgdir}/opt/openmeetings
 
-  cp -f -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/conf/* \
+  cp -f -r ${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/conf/* \
            ${pkgdir}/opt/openmeetings/conf
 
   rm ${pkgdir}/opt/openmeetings/bin/{*.bat,*.tar.gz}
   rm ${pkgdir}/opt/openmeetings/conf/tomcat-users.*
 
-  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/scripts/*.sh \
+  cp -p -r ${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/scripts/*.sh \
            ${pkgdir}/opt/openmeetings/bin
 
-  find  "${pkgdir}/opt/openmeetings/bin" -name *.sh -print0 | xargs -0 --no-run-if-empty chmod 755
-
-  install -Dpm644 "${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/scripts/openmeetings.service" \
+  install -Dpm644 "${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/scripts/openmeetings.service" \
           -t "${pkgdir}/usr/lib/systemd/system/"
 
+  install -d "${pkgdir}/run/openmeetings"
+
+  find "${pkgdir}/opt/openmeetings" -type 'f' '(' -name '*.bat' -o -name '*.tar.gz' ')' -delete
+
+  find "${pkgdir}/opt/openmeetings/bin" -type 'f' -name '*.sh' -exec chmod 755 '{}' '+'
+
   # Fix openmeetings.service
-  sed -e "s|JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64|JAVA_HOME=/usr/lib/jvm/java-11-openjdk|" \
-      -i "${pkgdir}/usr/lib/systemd/system/openmeetings.service"
-
-  sed -e "s|Group=nogroup|Group=nobody|" \
-      -i "${pkgdir}/usr/lib/systemd/system/openmeetings.service"
-
-  sed -e "s|CATALINA_PID=/var/run/openmeetings.pid|CATALINA_PID=/var/run/openmeetings/openmeetings.pid|" \
+  sed -Ee 's:^(Environment=JAVA_HOME)=.*$:\1=/usr/lib/jvm/java-11-openjdk:g' \
+      -e 's:^(Group)=.*$:\1=nobody:g' \
+      -e 's:^(Environment=CATALINA_PID)=.*$:\1=/var/run/openmeetings/openmeetings.pid:g' \
       -i "${pkgdir}/usr/lib/systemd/system/openmeetings.service"
 
   rm -R ${pkgdir}/opt/openmeetings/webapps/{examples,host-manager,manager,docs,ROOT}
 
   # install webapps openmeetings
-  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-web/target/openmeetings-web-5.0.0-M4/* \
+  cp -p -r ${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-web/target/openmeetings-web-5.0.0-M4/* \
            ${pkgdir}/opt/openmeetings/webapps/openmeetings
 
   # install webapps ROOT
-  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/ROOT \
+  cp -p -r ${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-server/src/main/assembly/ROOT \
            ${pkgdir}/opt/openmeetings/webapps
 
   # install webapps docs
-  cp -p -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/target/site/* \
+  cp -p -r ${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-server/target/site/* \
            ${pkgdir}/opt/openmeetings/webapps/openmeetings/docs
 
   # install screenshare
-  cp -f -r ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-screenshare/target/jnlp/* \
+  cp -f -r ${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-screenshare/target/jnlp/* \
            ${pkgdir}/opt/openmeetings/webapps/openmeetings/screenshare
 
-  # localhost.jks
-  tar -xz -C ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc} -f  \
-             ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/openmeetings-server/target/apache-openmeetings-${pkgver}-${_pkgver}${_rc}.tar.gz
+  # localhost.jks - later need to fix
+  tar -xz -C ${srcdir}/openmeetings-${_pkgver}${_rc} -f  \
+             ${srcdir}/openmeetings-${_pkgver}${_rc}/openmeetings-server/target/apache-openmeetings-${_pkgver}${_rc}.tar.gz
 
-  cp -f ${srcdir}/openmeetings-${pkgver}-${_pkgver}${_rc}/apache-openmeetings-${pkgver}-${_pkgver}${_rc}/conf/localhost.jks \
+  cp -f ${srcdir}/openmeetings-${_pkgver}${_rc}/apache-openmeetings-${_pkgver}${_rc}/conf/localhost.jks \
         ${pkgdir}/opt/openmeetings/conf/localhost.jks
 
 }

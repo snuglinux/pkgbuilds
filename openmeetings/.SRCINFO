@@ -1,0 +1,44 @@
+pkgbase = openmeetings
+	pkgdesc = Provides video conferencing, instant messaging, white board, collaborative document editing and other groupware tools. It uses API functions of Media Server for Remoting and Streaming (Red5 or Kurento)
+	pkgver = 5.0.0.M4
+	pkgrel = 3
+	url = http://openmeetings.apache.org/
+	install = openmeetings.install
+	arch = any
+	license = apache
+	makedepends = curl
+	makedepends = gcc
+	makedepends = make
+	makedepends = libtool
+	makedepends = bison
+	makedepends = autoconf
+	makedepends = automake
+	makedepends = fakeroot
+	makedepends = jshon
+	makedepends = expac
+	makedepends = mvnvm
+	makedepends = java-environment-openjdk=11
+	depends = libjpeg
+	depends = lame
+	depends = java-environment-openjdk=11
+	optdepends = imagemagick
+	optdepends = ghostscript
+	optdepends = sox
+	optdepends = libreoffice
+	optdepends = ffmpeg
+	optdepends = mysql
+	optdepends = openmeetings-mysql-connector-java
+	optdepends = docker
+	optdepends = kurento-media-server
+	optdepends = kms-elements
+	options = !strip
+	backup = opt/openmeetings/webapps/openmeetings/WEB-INF/classes/META-INF/persistence.xml
+	backup = opt/openmeetings/webapps/openmeetings/WEB-INF/classes/org/apache/openmeetings/web/room/VideoSettings.html
+	backup = opt/openmeetings/conf/server.xml
+	backup = opt/openmeetings/conf/context.xml
+	backup = opt/openmeetings/conf/logging.properties
+	source = https://github.com/apache/openmeetings/archive/5.0.0-M4.tar.gz
+	sha256sums = a6d218b807b8f9aee534a93d1dace74aac644cafd7e3ae54a35b267fd4c9c8e0
+
+pkgname = openmeetings
+
