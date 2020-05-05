@@ -1,0 +1,60 @@
+From ba0d7f3a3ec387f1f78152a2f64652127373f0c5 Mon Sep 17 00:00:00 2001
+From: Maxim Solodovnik <solomax666@gmail.com>
+Date: Sun, 3 May 2020 00:45:20 +0700
+Subject: [PATCH] [OPENMEETINGS-2327] video dimentions are corrected to be
+ dividable by 2
+
+---
+ .../core/converter/BaseConverter.java         | 23 ++++++++++---------
+ .../core/converter/VideoConverter.java        |  4 +++-
+ 2 files changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/openmeetings-core/src/main/java/org/apache/openmeetings/core/converter/BaseConverter.java b/openmeetings-core/src/main/java/org/apache/openmeetings/core/converter/BaseConverter.java
+index cbcc7d270d..5599b11208 100644
+--- a/openmeetings-core/src/main/java/org/apache/openmeetings/core/converter/BaseConverter.java
++++ b/openmeetings-core/src/main/java/org/apache/openmeetings/core/converter/BaseConverter.java
+@@ -315,17 +315,18 @@ protected String getDimensions(Recording r) {
+ 
+ 	private List<String> addMp4OutParams(Recording r, List<String> argv, String mp4path) {
+ 		argv.addAll(List.of(
+-				"-c:v", "h264", //
+-				"-crf", "24",
+-				"-vsync", "0",
+-				"-pix_fmt", "yuv420p",
+-				"-preset", getVideoPreset(),
+-				"-profile:v", "baseline",
+-				"-level", "3.0",
+-				"-movflags", "faststart",
+-				"-c:a", "aac",
+-				"-ar", String.valueOf(getAudioRate()),
+-				"-b:a", getAudioBitrate()
++				"-c:v", "h264" //
++				, "-crf", "24"
++				, "-vsync", "0"
++				, "-pix_fmt", "yuv420p"
++				, "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2"
++				, "-preset", getVideoPreset()
++				, "-profile:v", "baseline"
++				, "-level", "3.0"
++				, "-movflags", "faststart"
++				, "-c:a", "aac"
++				, "-ar", String.valueOf(getAudioRate())
++				, "-b:a", getAudioBitrate()
+ 				));
+ 		argv.addAll(additionalMp4OutParams(r));
+ 		argv.add(mp4path);
+diff --git a/openmeetings-core/src/main/java/org/apache/openmeetings/core/converter/VideoConverter.java b/openmeetings-core/src/main/java/org/apache/openmeetings/core/converter/VideoConverter.java
+index 660b5683dd..0f444ae2b3 100644
+--- a/openmeetings-core/src/main/java/org/apache/openmeetings/core/converter/VideoConverter.java
++++ b/openmeetings-core/src/main/java/org/apache/openmeetings/core/converter/VideoConverter.java
+@@ -69,7 +69,9 @@ public void convertVideo(FileItem f, StoredFile sf, ProcessResultList logs, Opti
+ 			args.addAll(List.of("-i", input //
+ 					, "-c:v", "h264" //
+ 					, "-c:a", "aac" //
+-					, "-pix_fmt", "yuv420p"));
++					, "-pix_fmt", "yuv420p"
++					, "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2"
++					));
+ 			if (sf.isAudio()) {
+ 				args.add("-shortest");
+ 			}

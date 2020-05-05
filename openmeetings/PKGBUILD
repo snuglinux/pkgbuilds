@@ -42,15 +42,19 @@ backup=("opt/openmeetings/webapps/openmeetings/WEB-INF/classes/META-INF/persiste
 options=('!strip')
 install="${pkgname}.install"
 
-source=("https://github.com/apache/openmeetings/archive/${_pkgver}${_rc}.tar.gz")
+source=("https://github.com/apache/openmeetings/archive/${_pkgver}${_rc}.tar.gz"
+        "ba0d7f3.patch")
 
-sha256sums=('a6d218b807b8f9aee534a93d1dace74aac644cafd7e3ae54a35b267fd4c9c8e0')
+sha256sums=('a6d218b807b8f9aee534a93d1dace74aac644cafd7e3ae54a35b267fd4c9c8e0'
+            '02c1dc762b08cc17922adef941cbc57aecf2bd5d14c9db30ca0d82f772e124ff')
 
 package() {
   # Use a temporary local maven repository.
   local mvn_repo="${srcdir}/mvn-repository"
 
   cd "${srcdir}/openmeetings-${_pkgver}${_rc}"
+  patch -p1 <"$srcdir/ba0d7f3.patch"
+
   export JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
   mvn clean install -Dmaven.repo.local="${mvn_repo}" -PallModules
 
