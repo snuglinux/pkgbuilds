@@ -1,0 +1,516 @@
+From c46b7d89f38b0bf4ea3c66365f87b26b1c992961 Mon Sep 17 00:00:00 2001
+From: Maxim Solodovnik <solomax666@gmail.com>
+Date: Thu, 7 May 2020 12:32:58 +0700
+Subject: [PATCH] [OPENMEETINGS-2328] additional config for SSL is added, code
+ clean-up
+
+---
+ .../openmeetings/core/mail/MailHandler.java   |  90 +++++--------
+ .../{user => core/mail}/TestMailSending.java  |  16 ++-
+ .../db/dao/basic/ConfigurationDao.java        | 120 ++++--------------
+ .../installation/ImportInitvalues.java        |   2 +
+ .../util/OpenmeetingsVariables.java           |  92 ++++++++++++++
+ 5 files changed, 163 insertions(+), 157 deletions(-)
+ rename openmeetings-core/src/test/java/org/apache/openmeetings/{user => core/mail}/TestMailSending.java (79%)
+
+diff --git a/openmeetings-core/src/main/java/org/apache/openmeetings/core/mail/MailHandler.java b/openmeetings-core/src/main/java/org/apache/openmeetings/core/mail/MailHandler.java
+index 0d19dffcda..3fbcc18f96 100644
+--- a/openmeetings-core/src/main/java/org/apache/openmeetings/core/mail/MailHandler.java
++++ b/openmeetings-core/src/main/java/org/apache/openmeetings/core/mail/MailHandler.java
+@@ -19,16 +19,17 @@
+ package org.apache.openmeetings.core.mail;
+ 
+ import static java.nio.charset.StandardCharsets.UTF_8;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_REPLY_TO_ORGANIZER;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_PASS;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_PORT;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_SERVER;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_SYSTEM_EMAIL;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_TIMEOUT;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_TIMEOUT_CON;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_TLS;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_USER;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.getMailFrom;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.getSmtpConnectionTimeOut;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.getSmtpPass;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.getSmtpPort;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.getSmtpServer;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.getSmtpTimeOut;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.getSmtpUser;
+ import static org.apache.openmeetings.util.OpenmeetingsVariables.isInitComplete;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.isMailAddReplyTo;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.isSmtpUseSsl;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.isSmtpUseTls;
+ 
+ import java.io.ByteArrayInputStream;
+ import java.io.IOException;
+@@ -54,7 +55,6 @@
+ import javax.mail.internet.MimeMultipart;
+ import javax.mail.util.ByteArrayDataSource;
+ 
+-import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
+ import org.apache.openmeetings.db.dao.basic.MailMessageDao;
+ import org.apache.openmeetings.db.entity.basic.MailMessage;
+ import org.apache.openmeetings.db.entity.basic.MailMessage.Status;
+@@ -70,7 +70,7 @@
+  *
+  * @author swagner
+  *
+- * For a documentation about Javax mail please see fro example:
++ * For a documentation about Javax mail please see for example:
+  * http://connector.sourceforge.net/doc-files/Properties.html
+  *
+  */
+@@ -80,45 +80,11 @@
+ 	private static final int MAIL_SEND_TIMEOUT = 60 * 60 * 1000; // 1 hour
+ 	private static final int MAXIMUM_ERROR_COUNT = 5;
+ 
+-	@Autowired
+-	private ConfigurationDao cfgDao;
+ 	@Autowired
+ 	private TaskExecutor taskExecutor;
+ 	@Autowired
+ 	private MailMessageDao mailMessageDao;
+ 
+-	private String smtpServer;
+-	private int smtpPort;
+-	private String from;
+-	private String mailAuthUser;
+-	private String mailAuthPass;
+-	private boolean mailTls;
+-	private boolean mailAddReplyTo;
+-	private int smtpConnectionTimeOut;
+-	private int smtpTimeOut;
+-
+-	private void init() {
+-		smtpServer = cfgDao.getString(CONFIG_SMTP_SERVER, null);
+-		smtpPort = cfgDao.getInt(CONFIG_SMTP_PORT, 25);
+-		from = cfgDao.getString(CONFIG_SMTP_SYSTEM_EMAIL, null);
+-		mailAuthUser = cfgDao.getString(CONFIG_SMTP_USER, null);
+-		mailAuthPass = cfgDao.getString(CONFIG_SMTP_PASS, null);
+-		mailTls = cfgDao.getBool(CONFIG_SMTP_TLS, false);
+-		mailAddReplyTo = cfgDao.getBool(CONFIG_REPLY_TO_ORGANIZER, true);
+-		smtpConnectionTimeOut = cfgDao.getInt(CONFIG_SMTP_TIMEOUT_CON, 30000);
+-		smtpTimeOut = cfgDao.getInt(CONFIG_SMTP_TIMEOUT, 30000);
+-	}
+-
+-	public void init(String smtpServer, int smtpPort, String from, String mailAuthUser, String mailAuthPass, boolean mailTls, boolean mailAddReplyTo) {
+-		this.smtpServer = smtpServer;
+-		this.smtpPort = smtpPort;
+-		this.from = from;
+-		this.mailAuthUser = mailAuthUser;
+-		this.mailAuthPass = mailAuthPass;
+-		this.mailTls = mailTls;
+-		this.mailAddReplyTo = mailAddReplyTo;
+-	}
+-
+ 	protected MimeMessage appendIcsBody(MimeMessage msg, MailMessage m) throws Exception {
+ 		log.debug("setMessageBody for iCal message");
+ 		// -- Create a new message --
+@@ -167,31 +133,36 @@ public MimeMessage appendBody(MimeMessage msg, String body) throws MessagingExce
+ 		return msg;
+ 	}
+ 
++	// this method should be public for tests
+ 	public MimeMessage getBasicMimeMessage() throws Exception {
+ 		log.debug("getBasicMimeMessage");
+-		if (smtpServer == null) {
+-			init();
++		if (getSmtpServer() == null) {
++			throw new IllegalStateException("SMTP settings were not provided");
+ 		}
+ 		Properties props = new Properties(System.getProperties());
+ 
+-		props.put("mail.smtp.host", smtpServer);
+-		props.put("mail.smtp.port", smtpPort);
+-		if (mailTls) {
+-			props.put("mail.smtp.ssl.trust", smtpServer);
+-			props.put("mail.smtp.starttls.enable", "true");
++		props.put("mail.smtp.host", getSmtpServer());
++		props.put("mail.smtp.port", getSmtpPort());
++		if (isSmtpUseTls() || isSmtpUseSsl()) {
++			props.put("mail.smtp.ssl.trust", getSmtpServer());
++		}
++		if (isSmtpUseTls() && isSmtpUseSsl()) {
++			log.warn("Both SSL and TLS are enabled, TLS will be started");
+ 		}
+-		props.put("mail.smtp.connectiontimeout", smtpConnectionTimeOut);
+-		props.put("mail.smtp.timeout", smtpTimeOut);
++		props.put("mail.smtp.starttls.enable", isSmtpUseTls());
++		props.put("mail.smtp.ssl.enable", isSmtpUseSsl());
++		props.put("mail.smtp.connectiontimeout", getSmtpConnectionTimeOut());
++		props.put("mail.smtp.timeout", getSmtpTimeOut());
+ 
+ 		// Check for Authentication
+ 		Session session;
+-		if (!Strings.isEmpty(mailAuthUser) && !Strings.isEmpty(mailAuthPass)) {
++		if (!Strings.isEmpty(getSmtpUser()) && !Strings.isEmpty(getSmtpPass())) {
+ 			// use SMTP Authentication
+-			props.put("mail.smtp.auth", "true");
++			props.put("mail.smtp.auth", true);
+ 			session = Session.getDefaultInstance(props, new Authenticator() {
+ 				@Override
+ 				protected PasswordAuthentication getPasswordAuthentication() {
+-					return new PasswordAuthentication(mailAuthUser, mailAuthPass);
++					return new PasswordAuthentication(getSmtpUser(), getSmtpPass());
+ 				}
+ 			});
+ 		} else {
+@@ -201,7 +172,7 @@ protected PasswordAuthentication getPasswordAuthentication() {
+ 
+ 		// Building MimeMessage
+ 		MimeMessage msg = new MimeMessage(session);
+-		msg.setFrom(new InternetAddress(from));
++		msg.setFrom(new InternetAddress(getMailFrom()));
+ 		return msg;
+ 	}
+ 
+@@ -211,7 +182,7 @@ private MimeMessage getMimeMessage(MailMessage m) throws Exception {
+ 		MimeMessage msg = getBasicMimeMessage();
+ 		msg.setSubject(m.getSubject(), UTF_8.name());
+ 		String replyTo = m.getReplyTo();
+-		if (replyTo != null && mailAddReplyTo) {
++		if (replyTo != null && isMailAddReplyTo()) {
+ 			log.debug("setReplyTo {}", replyTo);
+ 			if (MailUtil.isValid(replyTo)) {
+ 				msg.setReplyTo(new InternetAddress[]{new InternetAddress(replyTo)});
+@@ -280,7 +251,6 @@ public void resetSendingStatus() {
+ 	}
+ 
+ 	public void sendMails() {
+-		init();
+ 		log.trace("sendMails enter ...");
+ 		List<MailMessage> list = mailMessageDao.get(0, 1, MailMessage.Status.NONE);
+ 		if (!list.isEmpty()) {
+diff --git a/openmeetings-core/src/test/java/org/apache/openmeetings/user/TestMailSending.java b/openmeetings-core/src/test/java/org/apache/openmeetings/core/mail/TestMailSending.java
+similarity index 79%
+rename from openmeetings-core/src/test/java/org/apache/openmeetings/user/TestMailSending.java
+rename to openmeetings-core/src/test/java/org/apache/openmeetings/core/mail/TestMailSending.java
+index f4b7c30aca..1c919683f8 100644
+--- a/openmeetings-core/src/test/java/org/apache/openmeetings/user/TestMailSending.java
++++ b/openmeetings-core/src/test/java/org/apache/openmeetings/core/mail/TestMailSending.java
+@@ -16,8 +16,14 @@
+  * specific language governing permissions and limitations
+  * under the License.
+  */
+-package org.apache.openmeetings.user;
++package org.apache.openmeetings.core.mail;
+ 
++import static org.apache.openmeetings.util.OpenmeetingsVariables.setMailFrom;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.setSmtpPass;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.setSmtpPort;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.setSmtpServer;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.setSmtpUseTls;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.setSmtpUser;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
+ 
+ import javax.mail.Message;
+@@ -25,7 +31,6 @@
+ import javax.mail.internet.InternetAddress;
+ import javax.mail.internet.MimeMessage;
+ 
+-import org.apache.openmeetings.core.mail.MailHandler;
+ import org.junit.jupiter.api.Test;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+@@ -65,7 +70,12 @@ public void doTestSendEmail() {
+ 
+ 	private MimeMessage getMimeMessage() throws Exception {
+ 		MailHandler h = new MailHandler();
+-		h.init(smtpServer, smtpPort, from, mailAuthUser, mailAuthPass, mailTls, true);
++		setSmtpServer(smtpServer);
++		setSmtpPort(smtpPort);
++		setSmtpUseTls(mailTls);
++		setSmtpUser(mailAuthUser);
++		setSmtpPass(mailAuthPass);
++		setMailFrom(from);
+ 		// Building MimeMessage
+ 		MimeMessage msg = h.getBasicMimeMessage();
+ 		msg.setSubject("getSubject()");
+diff --git a/openmeetings-db/src/main/java/org/apache/openmeetings/db/dao/basic/ConfigurationDao.java b/openmeetings-db/src/main/java/org/apache/openmeetings/db/dao/basic/ConfigurationDao.java
+index 745029d9bf..12e481846c 100644
+--- a/openmeetings-db/src/main/java/org/apache/openmeetings/db/dao/basic/ConfigurationDao.java
++++ b/openmeetings-db/src/main/java/org/apache/openmeetings/db/dao/basic/ConfigurationDao.java
+@@ -20,100 +20,7 @@
+ 
+ import static org.apache.commons.lang3.math.NumberUtils.toInt;
+ import static org.apache.openmeetings.db.util.DaoHelper.setLimits;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_APPLICATION_BASE_URL;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_APPLICATION_NAME;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_AUTO_OPEN_SHARING;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CAM_FPS;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CHAT_SEND_ON_ENTER;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CRYPT;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CSP_FONT;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CSP_FRAME;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CSP_IMAGE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CSP_MEDIA;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CSP_SCRIPT;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CSP_STYLE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DEFAULT_GROUP_ID;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DEFAULT_LANG;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DEFAULT_TIMEZONE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DISPLAY_NAME_EDITABLE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EMAIL_AT_REGISTER;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EMAIL_VERIFICATION;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EXT_PROCESS_TTL;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_FNAME_MIN_LENGTH;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_GOOGLE_ANALYTICS_CODE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_ARRANGE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_ARRANGE_RESIZE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_MUTE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_MUTE_OTHERS;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_QUICKPOLL;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_LNAME_MIN_LENGTH;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_LOGIN_MIN_LENGTH;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MAX_UPLOAD_SIZE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MIC_ECHO;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MIC_NOISE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MIC_RATE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MP4_AUDIO_BITRATE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MP4_AUDIO_RATE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MP4_VIDEO_PRESET;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MYROOMS_ENABLED;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_PASS_MIN_LENGTH;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_REGISTER_FRONTEND;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_REGISTER_OAUTH;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_REGISTER_SOAP;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_REST_ALLOW_ORIGIN;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SIP_ENABLED;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SIP_EXTEN_CONTEXT;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_APP_NAME;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_BASE_URL;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_CSP_FONT;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_CSP_IMAGE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_CSP_STYLE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_MAX_UPLOAD_SIZE;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_SIP_CONTEXT;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.USER_LOGIN_MINIMUM_LENGTH;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.USER_PASSWORD_MINIMUM_LENGTH;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.getCspFontSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.getCspFrameSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.getCspImageSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.getCspMediaSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.getCspScriptSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.getCspStyleSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.getGaCode;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.getRoomSettings;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setAllowRegisterFrontend;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setAllowRegisterOauth;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setAllowRegisterSoap;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setApplicationName;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setAudioBitrate;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setAudioRate;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setBaseUrl;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setChatSendOnEnter;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setCryptClassName;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setCspFontSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setCspFrameSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setCspImageSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setCspMediaSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setCspScriptSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setCspStyleSrc;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setDefaultGroup;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setDefaultLang;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setDefaultTimezone;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setDisplayNameEditable;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setExtProcessTtl;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setGaCode;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setMaxUploadSize;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setMinFnameLength;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setMinLnameLength;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setMinLoginLength;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setMinPasswdLength;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setMyRoomsEnabled;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setRestAllowOrigin;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setRoomSettings;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setSendRegisterEmail;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setSendVerificationEmail;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setSipContext;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setSipEnabled;
+-import static org.apache.openmeetings.util.OpenmeetingsVariables.setVideoPreset;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.*;
+ import static org.apache.wicket.csp.CSPDirectiveSrcValue.SELF;
+ import static org.apache.wicket.csp.CSPDirectiveSrcValue.STRICT_DYNAMIC;
+ 
+@@ -429,6 +336,18 @@ public Configuration update(Configuration entity, Long userId, boolean deleted)
+ 			case CONFIG_CSP_STYLE:
+ 				updateCsp();
+ 				break;
++			case CONFIG_SMTP_SERVER:
++			case CONFIG_SMTP_PORT:
++			case CONFIG_SMTP_SYSTEM_EMAIL:
++			case CONFIG_SMTP_USER:
++			case CONFIG_SMTP_PASS:
++			case CONFIG_SMTP_TLS:
++			case CONFIG_SMTP_SSL:
++			case CONFIG_REPLY_TO_ORGANIZER:
++			case CONFIG_SMTP_TIMEOUT_CON:
++			case CONFIG_SMTP_TIMEOUT:
++				reloadMailSettings();
++				break;
+ 		}
+ 		return entity;
+ 	}
+@@ -556,6 +475,18 @@ private void reloadMyRoomsEnabled() {
+ 		setMyRoomsEnabled(getBool(CONFIG_MYROOMS_ENABLED, true));
+ 	}
+ 
++	private void reloadMailSettings() {
++		setSmtpServer(getString(CONFIG_SMTP_SERVER, null));
++		setSmtpPort(getInt(CONFIG_SMTP_PORT, 25));
++		setSmtpUser(getString(CONFIG_SMTP_USER, null));
++		setSmtpPass(getString(CONFIG_SMTP_PASS, null));
++		setSmtpUseTls(getBool(CONFIG_SMTP_TLS, false));
++		setSmtpTimeOut(getInt(CONFIG_SMTP_TIMEOUT, 30000));
++		setSmtpConnectionTimeOut(getInt(CONFIG_SMTP_TIMEOUT_CON, 30000));
++		setMailFrom(getString(CONFIG_SMTP_SYSTEM_EMAIL, null));
++		setMailAddReplyTo(getBool(CONFIG_REPLY_TO_ORGANIZER, true));
++	}
++
+ 	public void reinit() {
+ 		reloadMaxUpload();
+ 		reloadCrypt();
+@@ -583,6 +514,7 @@ public void reinit() {
+ 		reloadSendRegisterEmail();
+ 		reloadDisplayNameEditable();
+ 		reloadMyRoomsEnabled();
++		reloadMailSettings();
+ 
+ 		updateCsp();
+ 	}
+diff --git a/openmeetings-install/src/main/java/org/apache/openmeetings/installation/ImportInitvalues.java b/openmeetings-install/src/main/java/org/apache/openmeetings/installation/ImportInitvalues.java
+index dec91d3df7..a148d35ffb 100644
+--- a/openmeetings-install/src/main/java/org/apache/openmeetings/installation/ImportInitvalues.java
++++ b/openmeetings-install/src/main/java/org/apache/openmeetings/installation/ImportInitvalues.java
+@@ -93,6 +93,7 @@
+ import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_PASS;
+ import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_PORT;
+ import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_SERVER;
++import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_SSL;
+ import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_SYSTEM_EMAIL;
+ import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_TIMEOUT;
+ import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_TIMEOUT_CON;
+@@ -380,6 +381,7 @@ private static void addCfg(List<Configuration> list
+ 				+ cspMore, STRICT_DYNAMIC), VER_5_0_0);
+ 		addCfg(list, CONFIG_CSP_STYLE, DEFAULT_CSP_STYLE, Configuration.Type.STRING, String.format("Value for 'style-src' directive of 'Content-Security-Policy' header (default: %s)"
+ 				+ cspMore, DEFAULT_CSP_STYLE), VER_5_0_0);
++		addCfg(list, CONFIG_SMTP_SSL, String.valueOf(false), Configuration.Type.BOOL, "Enable SSL", VER_5_0_0);
+ 		return list;
+ 	}
+ 	public void loadConfiguration(InstallationConfig cfg) {
+diff --git a/openmeetings-util/src/main/java/org/apache/openmeetings/util/OpenmeetingsVariables.java b/openmeetings-util/src/main/java/org/apache/openmeetings/util/OpenmeetingsVariables.java
+index beee700fba..5bfea3b679 100644
+--- a/openmeetings-util/src/main/java/org/apache/openmeetings/util/OpenmeetingsVariables.java
++++ b/openmeetings-util/src/main/java/org/apache/openmeetings/util/OpenmeetingsVariables.java
+@@ -66,6 +66,7 @@
+ 	public static final String CONFIG_SMTP_PASS = "mail.smtp.pass";
+ 	public static final String CONFIG_SMTP_SYSTEM_EMAIL = "mail.smtp.system.email";
+ 	public static final String CONFIG_SMTP_TLS = "mail.smtp.starttls.enable";
++	public static final String CONFIG_SMTP_SSL = "mail.smtp.ssl.enable";
+ 	public static final String CONFIG_SMTP_TIMEOUT_CON = "mail.smtp.connection.timeout";
+ 	public static final String CONFIG_SMTP_TIMEOUT = "mail.smtp.timeout";
+ 	public static final String CONFIG_PATH_IMAGEMAGIC = "path.imagemagick";
+@@ -156,6 +157,16 @@
+ 	private static String cspMediaSrc = SELF.getValue();
+ 	private static String cspScriptSrc = STRICT_DYNAMIC.getValue();
+ 	private static String cspStyleSrc = DEFAULT_CSP_STYLE;
++	private static String smtpServer;
++	private static int smtpPort;
++	private static boolean smtpUseTls;
++	private static boolean smtpUseSsl;
++	private static String smtpUser;
++	private static String smtpPass;
++	private static int smtpTimeOut;
++	private static int smtpConnectionTimeOut;
++	private static String mailFrom;
++	private static boolean mailAddReplyTo;
+ 
+ 	private OpenmeetingsVariables() {}
+ 
+@@ -458,4 +469,85 @@ public static String getCspStyleSrc() {
+ 	public static void setCspStyleSrc(String src) {
+ 		cspStyleSrc = src;
+ 	}
++
++
++	public static String getSmtpServer() {
++		return smtpServer;
++	}
++
++	public static void setSmtpServer(String server) {
++		smtpServer = server;
++	}
++
++	public static int getSmtpPort() {
++		return smtpPort;
++	}
++
++	public static void setSmtpPort(int port) {
++		smtpPort = port;
++	}
++
++	public static boolean isSmtpUseTls() {
++		return smtpUseTls;
++	}
++
++	public static void setSmtpUseTls(boolean useTls) {
++		smtpUseTls = useTls;
++	}
++
++	public static boolean isSmtpUseSsl() {
++		return smtpUseSsl;
++	}
++
++	public static void setSmtpUseSsl(boolean useSsl) {
++		smtpUseSsl = useSsl;
++	}
++
++	public static String getSmtpUser() {
++		return smtpUser;
++	}
++
++	public static void setSmtpUser(String user) {
++		smtpUser = user;
++	}
++
++	public static String getSmtpPass() {
++		return smtpPass;
++	}
++
++	public static void setSmtpPass(String pass) {
++		smtpPass = pass;
++	}
++
++	public static int getSmtpTimeOut() {
++		return smtpTimeOut;
++	}
++
++	public static void setSmtpTimeOut(int timeOut) {
++		smtpTimeOut = timeOut;
++	}
++
++	public static int getSmtpConnectionTimeOut() {
++		return smtpConnectionTimeOut;
++	}
++
++	public static void setSmtpConnectionTimeOut(int timeOut) {
++		smtpConnectionTimeOut = timeOut;
++	}
++
++	public static String getMailFrom() {
++		return mailFrom;
++	}
++
++	public static void setMailFrom(String from) {
++		mailFrom = from;
++	}
++
++	public static boolean isMailAddReplyTo() {
++		return mailAddReplyTo;
++	}
++
++	public static void setMailAddReplyTo(boolean addReplyTo) {
++		mailAddReplyTo = addReplyTo;
++	}
+ }
