@@ -23,6 +23,7 @@
 pkgname=('openmeetings')
 _pkgver='5.0.0-M4'
 pkgver="${_pkgver//-/.}"
+pkgver="${pkgver,,}"
 pkgrel='4'
 _rc=''
 pkgdesc='Provides video conferencing, instant messaging, white board, collaborative document editing and other groupware tools. It uses API functions of Media Server for Remoting and Streaming (Red5 or Kurento)'
@@ -44,11 +45,13 @@ install="${pkgname}.install"
 
 source=("https://github.com/apache/openmeetings/archive/${_pkgver}${_rc}.tar.gz"
         "ba0d7f3.patch"
-        "c46b7d8.patch")
+        "c46b7d8.patch"
+        "cd45b78.patch")
 
 sha256sums=('a6d218b807b8f9aee534a93d1dace74aac644cafd7e3ae54a35b267fd4c9c8e0'
             '02c1dc762b08cc17922adef941cbc57aecf2bd5d14c9db30ca0d82f772e124ff'
-            '34fd0a434beffa712a0da0fec9cc152e146b33dfe63c4c46c6a58ab428a199e6')
+            '34fd0a434beffa712a0da0fec9cc152e146b33dfe63c4c46c6a58ab428a199e6'
+            '3b1ea024c5b450b66c906cf476a78fe263609bcf9e24f8ea5573c9cc9f5a7ca7')
 
 package() {
   # Use a temporary local maven repository.
@@ -58,8 +61,10 @@ package() {
 
   # fix: Error while opening encoder for output stream #0:0
   patch -p1 <"$srcdir/ba0d7f3.patch"
+
   # fix: Sending messages through an external mailbox
   patch -p1 <"$srcdir/c46b7d8.patch"
+  patch -p1 <"$srcdir/cd45b78.patch"
 
   export JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
   mvn clean install -Dmaven.repo.local="${mvn_repo}" -PallModules

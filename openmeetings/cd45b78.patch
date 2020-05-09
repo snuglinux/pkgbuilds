@@ -1,0 +1,21 @@
+From cd45b78703120e81f4cf64c59780fcd75e5ad95a Mon Sep 17 00:00:00 2001
+From: Maxim Solodovnik <solomax666@gmail.com>
+Date: Sat, 9 May 2020 20:55:02 +0700
+Subject: [PATCH] [OPENMEETINGS-2328] useSsl wasn't get called
+
+---
+ .../org/apache/openmeetings/db/dao/basic/ConfigurationDao.java   | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/openmeetings-db/src/main/java/org/apache/openmeetings/db/dao/basic/ConfigurationDao.java b/openmeetings-db/src/main/java/org/apache/openmeetings/db/dao/basic/ConfigurationDao.java
+index 12e481846c..808a40a7a6 100644
+--- a/openmeetings-db/src/main/java/org/apache/openmeetings/db/dao/basic/ConfigurationDao.java
++++ b/openmeetings-db/src/main/java/org/apache/openmeetings/db/dao/basic/ConfigurationDao.java
+@@ -481,6 +481,7 @@ private void reloadMailSettings() {
+ 		setSmtpUser(getString(CONFIG_SMTP_USER, null));
+ 		setSmtpPass(getString(CONFIG_SMTP_PASS, null));
+ 		setSmtpUseTls(getBool(CONFIG_SMTP_TLS, false));
++		setSmtpUseSsl(getBool(CONFIG_SMTP_SSL, false));
+ 		setSmtpTimeOut(getInt(CONFIG_SMTP_TIMEOUT, 30000));
+ 		setSmtpConnectionTimeOut(getInt(CONFIG_SMTP_TIMEOUT_CON, 30000));
+ 		setMailFrom(getString(CONFIG_SMTP_SYSTEM_EMAIL, null));
