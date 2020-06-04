@@ -1,0 +1,19 @@
+diff --git a/CLOBBER b/CLOBBER
+--- a/CLOBBER
++++ b/CLOBBER
+@@ -17,9 +17,9 @@
+ #
+ # Modifying this file will now automatically clobber the buildbot machines \o/
+ #
+ 
+ # Are you updating CLOBBER because you think it's needed for your WebIDL
+ # changes to stick? As of bug 928195, this shouldn't be necessary! Please
+ # don't change CLOBBER for WebIDL changes any more.
+ 
+-Merge day clobber
+\ No newline at end of file
++Bug 1397263 - moving AS to moz.configure will break AS detection
+
+
+
+
