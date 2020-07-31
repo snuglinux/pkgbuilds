@@ -1,0 +1,32 @@
+pkgname=x11vncd
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="X11vnc startup script using systemd"
+arch=('any')
+url="https://github.com/snuglinux/${pkgname}"
+license=('GPL2')
+depends=("bash" "x11vnc" )
+source=("https://github.com/snuglinux/${pkgname}/archive/${pkgver}.tar.gz")
+md5sums=('cf2ba07c14eee339d2f2315610a7ae75')
+backup=( "etc/${pkgname}.conf" )
+
+package(){
+  cd "$srcdir/${pkgname}-${pkgver}"
+
+  # Create folders
+  install -d "${pkgdir}/etc"
+  install -d "${pkgdir}/usr/lib/systemd/system"
+  install -d "${pkgdir}/usr/bin"
+  install -d "${pkgdir}/usr/share/doc/${pkgname}"
+  install -d "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  # Copy files
+  install -m754 ${pkgname}         "${pkgdir}/usr/bin"
+  install -m754 find-auth          "${pkgdir}/usr/bin"
+  install -m644 ${pkgname}.conf    "${pkgdir}/etc"
+  install -m644 README.md          "${pkgdir}/usr/share/doc/${pkgname}/README"
+  install -m644 ${pkgname}.service "${pkgdir}/usr/lib/systemd/system"
+  #install -Dm 644 COPYING       "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  sed -e "s/CURRENT_VERSION=0.0.0/CURRENT_VERSION=${pkgver}/" -i "${pkgdir}/usr/bin/${pkgname}"
+}
+
