@@ -31,6 +31,8 @@ boards=('A10-OLinuXino-Lime'
         'Linksprite_pcDuino'
         'Linksprite_pcDuino3'
         'Linksprite_pcDuino3_Nano'
+        'Orangepi'
+        'Orangepi_mini'
         'orangepi_2'
         'orangepi_lite'
         'orangepi_one'
@@ -96,16 +98,16 @@ _package() {
 build() {
   cd u-boot-${pkgver}
 
-#  unset CFLAGS CXXFLAGS LDFLAGS
+  unset CFLAGS CXXFLAGS LDFLAGS
 
-#  for i in ${boards[@]}; do
-#    mkdir ../bin_${i}
-#    make distclean
-#    make ${i}_config
-#    echo 'CONFIG_IDENT_STRING=" Snug Linux ARM"' >> .config
-#    make EXTRAVERSION=-${pkgrel}
-#    mv u-boot-sunxi-with-spl.bin ../bin_${i}
-#  done
+  for i in ${boards[@]}; do
+    mkdir ../bin_${i}
+    make distclean
+    make ${i}_config
+    echo 'CONFIG_IDENT_STRING=" Snug Linux ARM"' >> .config
+    make EXTRAVERSION=-${pkgrel}
+    mv u-boot-sunxi-with-spl.bin ../bin_${i}
+  done
 
-#  tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d ../boot.txt ../boot.scr
+  tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d ../boot.txt ../boot.scr
 }
