@@ -1,0 +1,111 @@
+buildarch=4
+
+pkgbase=uboot-sunxi
+pkgver=2020.04
+pkgrel=1
+arch=('armv7h')
+url="http://git.denx.de/u-boot.git/"
+license=('GPL')
+makedepends=('bc' 'dtc' 'python' 'swig')
+backup=('boot/boot.txt' 'boot/boot.scr')
+source=("ftp://ftp.denx.de/pub/u-boot/u-boot-${pkgver}.tar.bz2"
+        'boot.txt'
+        'mkscr')
+md5sums=('51113d2288c55110e33a895c65ab9f60'
+         '95f60c0ae1315e986d8a2aee15d5f854'
+         '021623a04afd29ac3f368977140cfbfd')
+# armv7h:
+boards=('A10-OLinuXino-Lime'
+        'A10s-OLinuXino-M'
+        'A13-OLinuXino'
+        'A13-OLinuXinoM'
+        'A20-OLinuXino-Lime'
+        'A20-OLinuXino-Lime2'
+        'A20-OLinuXino_MICRO'
+        'Bananapi'
+        'Bananapro'
+        'CHIP'
+        'Cubieboard'
+        'Cubieboard2'
+        'Cubietruck'
+        'Linksprite_pcDuino'
+        'Linksprite_pcDuino3'
+        'Linksprite_pcDuino3_Nano'
+        'orangepi_2'
+        'orangepi_lite'
+        'orangepi_one'
+        'orangepi_pc'
+        'orangepi_pc_plus'
+        'orangepi_plus2e'
+        'orangepi_plus'
+        'orangepi_r1'
+        'orangepi_zero'
+        'orangepi_zero_plus2_h3')
+# armv8:
+#        'orangepi_zero_plus' (armv8)
+#        'orangepi-rk3399'
+#        'orangepi_lite2' (armv8)
+#        'orangepi_one_plus' (armv8)
+#        'orangepi_pc2' (armv8)
+#        'orangepi_prime' (armv8)
+#        'orangepi_win' (armv8)
+#        'orangepi_zero_plus2' (armv8)
+
+pkgname=()
+
+#======================================
+for board in "${boards[@]}"; do
+   _board=${board//_/-}
+  _pkgname=${_board,,}
+  pkgname+=("uboot-$_pkgname")
+  eval "package_uboot-$_pkgname() {
+    _package $board
+  }"
+done
+
+#======================================
+_package() {
+  _board=$1;
+  pkgdesc="U-Boot for ${_board}"
+
+  install=${pkgbase}.install
+  provides=('uboot-sunxi')
+  conflicts=('uboot-sunxi')
+
+  if [ ${_board} == "A10s-OLinuXino-M" ]; then
+     replaces=('uboot-a10s-olinuxino-micro')
+  elif [ ${_board} ==  "A13-OLinuXinoM" ]; then
+     replaces=('uboot-a13-olinuxino-micro')
+  elif [ ${_board} == "Linksprite_pcDuino" ]; then
+     replaces=('uboot-pcduino')
+  elif [ ${_board} == "Linksprite_pcDuino3" ]; then
+     replaces=('uboot-pcduino3')
+  elif [ ${_board} == "Linksprite_pcDuino3_Nano" ]; then
+     replaces=('uboot-pcduino3-nano')
+  fi
+
+  install -d "${pkgdir}"/boot
+  install -Dm644 bin_${_board}/u-boot-sunxi-with-spl.bin "${pkgdir}"/boot
+
+  install -Dm644 boot.txt "${pkgdir}"/boot/boot.txt
+  install -Dm644 boot.scr "${pkgdir}"/boot/boot.scr
+  install -Dm755 mkscr    "${pkgdir}"/boot/mkscr
+}
+
+#======================================
+build() {
+  cd u-boot-${pkgver}
+
+#  unset CFLAGS CXXFLAGS LDFLAGS
+
+#  for i in ${boards[@]}; do
+#    mkdir ../bin_${i}
+#    make distclean
+#    make ${i}_config
+#    echo 'CONFIG_IDENT_STRING=" Snug Linux ARM"' >> .config
+#    make EXTRAVERSION=-${pkgrel}
+#    mv u-boot-sunxi-with-spl.bin ../bin_${i}
+#  done
+
+#  tools/mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d ../boot.txt ../boot.scr
+}
