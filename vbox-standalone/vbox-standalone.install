@@ -1,0 +1,17 @@
+USER=vbox
+GROUP=vboxusers
+
+pre_install() {
+  # Create User
+  getent passwd ${USER} > /dev/null || useradd --system --gid ${USER} --shell /sbin/nologin ${USER}
+}
+
+post_install() {
+  echo "Change files permissions"
+  chown ${USER}:${GROUP} /bin/vbox-standalone
+  chown ${USER}:${GROUP} /etc/vbox-standalone.conf
+}
+
+post_upgrade() {
+  post_install $1
+}

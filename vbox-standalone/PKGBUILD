@@ -1,0 +1,33 @@
+pkgname=vbox-standalone
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="Starts instance of virtualbox using xinit."
+arch=('any')
+url="https://github.com/snuglinux/${pkgname}"
+license=('GPL2')
+depends=("bash" "xdialog" "xorg-xinput" "xfwm4" "virtualbox")
+source=("https://github.com/snuglinux/${pkgname}/archive/${pkgver}.tar.gz")
+md5sums=('ac0e896f17de429f3591dcd7a8788354')
+backup=( "etc/${pkgname}.conf" )
+install=${pkgname}.install
+
+package(){
+  cd "$srcdir/${pkgname}-${pkgver}"
+
+  # Create folders
+  install -d "${pkgdir}/etc"
+  install -d "${pkgdir}/usr/bin"
+  install -d "${pkgdir}/usr/share/doc/${pkgname}"
+  install -d "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -d "${pkgdir}/usr/lib/systemd/system"
+
+  # Copy files
+  install -m754 ${pkgname}         "${pkgdir}/usr/bin"
+  install -m644 ${pkgname}.conf    "${pkgdir}/etc"
+  install -m644 README.md          "${pkgdir}/usr/share/doc/${pkgname}/README"
+  install -m644 ${pkgname}.service "${pkgdir}/usr/lib/systemd/system"
+  install -Dm 644 COPYING          "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  #sed -e "s/VER=0.0.0/VER=${pkgver}/" -i "${pkgdir}/usr/bin/${pkgname}"
+}
+
