@@ -3,7 +3,9 @@ GROUP=vboxusers
 
 pre_install() {
   # Create User
-  getent passwd ${USER} > /dev/null || useradd --system --gid ${USER} --shell /sbin/nologin ${USER}
+  getent passwd ${USER} > /dev/null || useradd --create-home --system \
+                                               --gid $GROUP -G "audio,games,lp,optical,power,scanner,storage,video,wheel,disk,uucp,vboxusers" \
+                                               --shell /sbin/nologin "${USER}"
 }
 
 post_install() {

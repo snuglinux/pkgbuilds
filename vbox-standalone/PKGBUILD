@@ -1,13 +1,13 @@
 pkgname=vbox-standalone
-pkgver=0.0.1
+pkgver=0.0.2
 pkgrel=1
 pkgdesc="Starts instance of virtualbox using xinit."
 arch=('any')
 url="https://github.com/snuglinux/${pkgname}"
 license=('GPL2')
-depends=("bash" "xdialog" "xorg-xinput" "xfwm4" "virtualbox")
+depends=("bash" "xdialog" "xorg-xinput" "xfwm4" "virtualbox" "xorg-xinit" )
 source=("https://github.com/snuglinux/${pkgname}/archive/${pkgver}.tar.gz")
-md5sums=('ac0e896f17de429f3591dcd7a8788354')
+md5sums=('fafee694362a7258170cc6be89ed7012')
 backup=( "etc/${pkgname}.conf" )
 install=${pkgname}.install
 
