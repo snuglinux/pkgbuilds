@@ -1,0 +1,27 @@
+pkgname=euswi
+pkgver=1.3.1.4
+pkgrel=1
+pkgdesc="CSK user software package"
+arch=('x86_64')
+url="https://github.com/snuglinux/${pkgname}"
+license=('GPL2')
+depends=("bash")
+source=("http://iit.com.ua/download/productfiles/${pkgname}.64.tar")
+md5sums=('e60ff8151d560f59e9588b5053342771')
+install=${pkgname}.install
+
+package(){
+  cd "$srcdir"
+
+  # Create folders
+  install -d "${pkgdir}/etc/udev/rules.d"
+  install -d "${pkgdir}/usr/lib/mozilla/plugins"
+  install -d "${pkgdir}/opt/iit/eu/sw"
+
+  # Copy files
+  install -m644 etc/udev/rules.d/60-iit-e-keys.rules "${pkgdir}/etc/udev/rules.d"
+  cp opt/iit/eu/sw/* "${pkgdir}/opt/iit/eu/sw"
+  ln -s /opt/iit/eu/sw/npeuscp.so "${pkgdir}/usr/lib/mozilla/plugins/npeuscp.so"
+  rm ${pkgdir}/opt/iit/eu/sw/*.sh
+}
+

@@ -1,0 +1,14 @@
+post_install() {
+  echo "euscpnmh /install"
+  /opt/iit/eu/sw/euscpnmh /install
+}
+
+pre_remove() {
+  echo "euscpnmh /unistall"
+  /opt/iit/eu/sw/euscpnmh /unistall
+}
+
+post_upgrade() {
+  post_install $1
+}
+
