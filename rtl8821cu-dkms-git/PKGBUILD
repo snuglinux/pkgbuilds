@@ -1,32 +1,30 @@
-# Maintainer: nariox <pedro(dot)nariyoshi(at)gmail(dot)com>
-
 pkgname=rtl8821cu-dkms-git
 _pkgbase=rtl8821cu
-pkgver=5.4.1492ec29cf
-pkgrel=3
-pkgdesc="rtl8821cu chipset driver"
+_pkgver="5.8.1.7"
+pkgver=5.8.1.7.99.e54b8f4
+pkgrel=1
+pkgdesc="Linux Driver for USB WiFi Adapters that use the RTL8811CU, RTL8821CU and RTL8731AU Chipsets"
 arch=('i686' 'x86_64' 'armv7h')
-url="https://github.com/smp79/rtl8821CU"
+url="https://github.com/morrownr/8821cu.git"
 license=('GPL2')
-depends=('dkms' 'bc')
+depends=('dkms' 'bc') #'linux-headers'
 makedepends=('git')
-conflicts=("${_pkgbase}")
-source=("git+https://github.com/smp79/rtl8821CU"
-        'dkms.conf')
-sha256sums=('SKIP'
-	    '6863d28cbb525eab0be7b5244a5b924302516142a1925fc6521ce49a2800b03d')
+conflicts=("${_pkgbase}" "${_pkgbase}-git")
+source=("git+https://github.com/morrownr/8821cu")
+sha256sums=('SKIP')
+backup=( "etc/modprobe.d/8821cu.conf" )
+
 pkgver() {
-    cd ${srcdir}/rtl8821CU
-    printf '%s' '5.4.1' "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+   cd ${srcdir}/8821cu
+   printf '%s' ${_pkgver} "." "$(git rev-list --count HEAD)" "." "$(git rev-parse --short HEAD)"
 }
 
 package() {
-        cd ${srcdir}/rtl8821CU
-        mkdir -p ${pkgdir}/usr/src/${_pkgbase}-${pkgver}
-        cp -pr * ${pkgdir}/usr/src/${_pkgbase}-${pkgver}
-        cp ${srcdir}/dkms.conf ${pkgdir}/usr/src/${_pkgbase}-${pkgver}
-        # Set name and version
-        sed -e "s/@_PKGBASE@/${_pkgbase}-dkms/" \
-                        -e "s/@PKGVER@/${pkgver}/" \
-                        -i "${pkgdir}"/usr/src/${_pkgbase}-${pkgver}/dkms.conf
+   cd ${srcdir}/8821cu
+   mkdir -p ${pkgdir}/etc/modprobe.d
+   mkdir -p ${pkgdir}/usr/src/${_pkgbase}-${pkgver}
+   cp -pr * ${pkgdir}/usr/src/${_pkgbase}-${pkgver}
+   cp 8821cu.conf ${pkgdir}/etc/modprobe.d
+   rm ${pkgdir}/usr/src/${_pkgbase}-${pkgver}/*.sh
 }
+

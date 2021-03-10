@@ -1,8 +1,8 @@
 pkgbase = rtl8821cu-dkms-git
-	pkgdesc = rtl8821cu chipset driver
-	pkgver = 5.4.1492ec29cf
-	pkgrel = 3
-	url = https://github.com/smp79/rtl8821CU
+	pkgdesc = Linux Driver for USB WiFi Adapters that use the RTL8811CU, RTL8821CU and RTL8731AU Chipsets
+	pkgver = 5.8.1.7.99.e54b8f4
+	pkgrel = 1
+	url = https://github.com/morrownr/8821cu.git
 	arch = i686
 	arch = x86_64
 	arch = armv7h
@@ -11,10 +11,10 @@ pkgbase = rtl8821cu-dkms-git
 	depends = dkms
 	depends = bc
 	conflicts = rtl8821cu
-	source = git+https://github.com/smp79/rtl8821CU
-	source = dkms.conf
+	conflicts = rtl8821cu-git
+	backup = etc/modprobe.d/8821cu.conf
+	source = git+https://github.com/morrownr/8821cu
 	sha256sums = SKIP
-	sha256sums = 6863d28cbb525eab0be7b5244a5b924302516142a1925fc6521ce49a2800b03d
 
 pkgname = rtl8821cu-dkms-git
 
