@@ -1,0 +1,18 @@
+pkgname=libav337p11d
+pkgver=1.1.11
+pkgrel=1
+pkgdesc="Avtor SecureToken Driver"
+arch=('x86_64')
+url="http://www.dbosoft.com.ua"
+depends=("pcsc-tools" "ccid" "opensc")
+source=("https://docs.cipher.kiev.ua/download/attachments/32605088/Avtor_Linux_x64.zip")
+md5sums=('5a4ea83df0bab3478b962a59ff7152a9')
+install=${pkgname}.install
+
+package(){
+   cd "$srcdir/Linux_x64"
+
+   install -d "${pkgdir}/usr/lib"
+   cp libav337p11d.so ${pkgdir}/usr/lib
+}
+

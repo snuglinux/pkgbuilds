@@ -1,0 +1,14 @@
+#!/bin/sh
+
+post_install() {
+   systemctl enable pcscd
+   systemctl restart pcscd
+}
+
+post_upgrade() {
+   systemctl restart pcscd
+}
+
+post_remove() {
+   systemctl restart pcscd
+}
