@@ -1,0 +1,10 @@
+--- a/src/arch/CMakeLists.txt	2020-11-14 01:16:51.000000000 +0000
++++ b/src/arch/CMakeLists.txt	2021-04-01 18:29:07.871167763 +0000
+@@ -1,5 +1,7 @@
+ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+     add_library(arch aarch64.cpp)
++elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")
++    add_library(arch aarch64.cpp)
+ elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64" OR
+        CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
+     add_library(arch ppc64.cpp)
