@@ -1,12 +1,13 @@
 pkgbase = kms-core
 	pkgdesc = Kurento media server core library
-	pkgver = 6.13.0
-	pkgrel = 2
+	pkgver = 6.16.0
+	pkgrel = 1
 	url = https://github.com/Kurento/kms-core
 	arch = any
 	license = apache
 	makedepends = kms-cmake-utils
 	makedepends = kurento-module-creator
+	makedepends = kms-jsonrpc
 	depends = boost
 	depends = libsigc++
 	depends = glibmm
@@ -14,7 +15,7 @@ pkgbase = kms-core
 	depends = gst-plugins-base
 	depends = kms-jsoncpp
 	depends = kms-jsonrpc
-	source = git://github.com/Kurento/kms-core.git#tag=6.13.0
+	source = git://github.com/Kurento/kms-core.git#tag=6.16.0
 	source = cmake-boost.patch
 	source = kmscore.c.patch
 	sha256sums = SKIP
