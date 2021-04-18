@@ -1,5 +1,5 @@
 pkgname=kms-cmake-utils
-pkgver=6.13.0
+pkgver=6.16.0
 pkgrel=1
 pkgdesc="Helpers for cmake build of Kurento media server"
 arch=(any)
