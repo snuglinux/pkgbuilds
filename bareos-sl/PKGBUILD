@@ -30,7 +30,7 @@ pkgname=("bareos-common${prefix}"
 
 pkgver=20.0.1
 pkgmajor=${pkgver%%.*}
-pkgrel=1
+pkgrel=3
 arch=(i686 x86_64 armv7h aarch64)
 groups=('bareos')
 pkgdesc="Bareos - Backup Archiving REcovery Open Sourced"
@@ -40,10 +40,14 @@ makedepends=('libmariadbclient' 'postgresql-libs' 'sqlite3' 'python2' 'cmake' 'r
 source=("git+https://github.com/bareos/bareos.git#tag=Release/${pkgver}"
         "fix-build-bareos.patch"
         "fix-headlink.patch"
+        "mysql.patch"
+        "PoolModel.patch"
         "bootstrap-table-locale-all.min.js")
 md5sums=('SKIP'
          '018310ec5860e8b78b1855cc21c7b963'
          'b26fd1ffccc2b54f3f898d6d896e8929'
+         '926d71d75bb40c2023583c33712f6e2b'
+         'e35a03f09797b00c098ecb829f1ad5f8'
          'e78b88f897cfc3e60129eec360521e3d')
 conflicts=("bareos")
 provides=("bareos")
@@ -55,6 +59,8 @@ prepare() {
   #patch --forward --strip=1 --input="../../restore-form.patch"
   patch --forward --strip=1 --input="../fix-build-bareos.patch"
   patch --forward --strip=1 --input="../fix-headlink.patch"
+  patch --forward --strip=1 --input="../mysql.patch"
+  patch --forward --strip=1 --input="../PoolModel.patch"
 }
 
 #=========================================
@@ -641,10 +647,9 @@ package_bareos-traymonitor-sl() {
   groups+=("bareos-client")
   conflicts=("bareos-traymonitor")
   pkgdesc="${pkgdesc} - This package contains the tray monitor (QT based)"
-  depends=("bareos-filedaemon${prefix}=${pkgver}"
-           "bareos-filedaemon-python3-plugin${prefix}=${pkgver}"
-           'python-ldap')
+  depends=("bareos-common${prefix}=${pkgver}")
   #backup=("etc/bareos/tray-monitor.d/tray-monitor.conf")
+  install=bareos-traymonitor.install
 
   install -d -m750 ${pkgdir}/etc/bareos/tray-monitor.d/monitor
 

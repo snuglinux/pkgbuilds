@@ -1,7 +1,7 @@
 pkgbase = bareos
 	pkgdesc = Bareos - Backup Archiving REcovery Open Sourced
 	pkgver = 20.0.1
-	pkgrel = 1
+	pkgrel = 3
 	url = http://www.bareos.org
 	arch = i686
 	arch = x86_64
@@ -22,10 +22,14 @@ pkgbase = bareos
 	source = git+https://github.com/bareos/bareos.git#tag=Release/20.0.1
 	source = fix-build-bareos.patch
 	source = fix-headlink.patch
+	source = mysql.patch
+	source = PoolModel.patch
 	source = bootstrap-table-locale-all.min.js
 	md5sums = SKIP
 	md5sums = 018310ec5860e8b78b1855cc21c7b963
 	md5sums = b26fd1ffccc2b54f3f898d6d896e8929
+	md5sums = 926d71d75bb40c2023583c33712f6e2b
+	md5sums = e35a03f09797b00c098ecb829f1ad5f8
 	md5sums = e78b88f897cfc3e60129eec360521e3d
 
 pkgname = bareos-common-sl
@@ -259,10 +263,8 @@ pkgname = bareos-filedaemon-ldap-python-plugin-sl
 
 pkgname = bareos-traymonitor-sl
 	pkgdesc = Bareos - Backup Archiving REcovery Open Sourced - This package contains the tray monitor (QT based)
+	install = bareos-traymonitor.install
 	groups = bareos
 	groups = bareos-client
-	depends = bareos-filedaemon-sl=20.0.1
-	depends = bareos-filedaemon-python3-plugin-sl=20.0.1
-	depends = python-ldap
+	depends = bareos-common-sl=20.0.1
 	conflicts = bareos-traymonitor
-
