@@ -1,5 +1,5 @@
 pkgname=euswi
-pkgver=1.3.1.4
+pkgver=1.3.1.2
 pkgrel=1
 pkgdesc="CSK user software package"
 arch=('x86_64')
@@ -7,7 +7,7 @@ url="https://github.com/snuglinux/${pkgname}"
 license=('GPL2')
 depends=("bash")
 source=("http://iit.com.ua/download/productfiles/${pkgname}.64.tar")
-md5sums=('e60ff8151d560f59e9588b5053342771')
+md5sums=('1bbf3196d82e79c7acd919cf8e815d99')
 install=${pkgname}.install
 
 package(){
