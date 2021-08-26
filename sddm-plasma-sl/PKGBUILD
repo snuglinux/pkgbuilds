@@ -1,0 +1,26 @@
+pkgname="sddm-plasma-sl"
+pkgver=0.0.1
+pkgrel=1
+arch=('any')
+url="https://github.com/snuglinux/${pkgname}"
+license=('GPL2')
+depends=("sddm" "plasma-desktop")
+groups=("plasma")
+source=("https://github.com/snuglinux/${pkgname}/archive/${pkgver}.zip")
+md5sums=('a9d1acba4cfd12fa1a7a8c6a68fa8a43')
+backup=( "etc/sddm.conf.d/kde_settings.conf")
+
+package(){
+  cd "$srcdir/${pkgname}-${pkgver}"
+
+  # Create folders
+  install -d "${pkgdir}/etc/sddm.conf.d"
+  install -d "${pkgdir}/usr/share/doc/${pkgname}"
+  install -d "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  # Copy files
+  install -m644 README.md               "${pkgdir}/usr/share/doc/${pkgname}/README"
+  install -Dm 644 COPYING               "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm 644 "kde_settings.conf"   "${pkgdir}//etc/sddm.conf.d"
+}
+
