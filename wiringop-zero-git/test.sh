@@ -5,14 +5,14 @@
 
 mode=$1
 
-for i in `seq 0 10`;
+for i in `seq 0 24`;
 do
   gpio mode $i out
 done
 
 while true;
 do
-  for i in `seq 0 10`;
+  for i in `seq 0 24`;
   do
     echo "gpio write $i 1"
     gpio write $i 1
@@ -23,7 +23,7 @@ do
     fi
   done
 
-  for i in `seq 0 10`;
+  for i in `seq 0 24`;
   do
     echo "gpio write $i 0"
     gpio write $i 0
