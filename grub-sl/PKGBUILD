@@ -1,0 +1,26 @@
+pkgname="grub-sl"
+pkgver=0.0.1
+pkgrel=1
+arch=('any')
+url="https://github.com/snuglinux/${pkgname}"
+license=('GPL2')
+depends=("grub")
+source=("https://github.com/snuglinux/${pkgname}/archive/${pkgver}.zip")
+md5sums=('9abca21d053b5f248aa1ec409e98982a')
+backup=( "etc/default/grub-sl" )
+install=$pkgname.install
+
+package(){
+  cd "$srcdir/${pkgname}-${pkgver}"
+
+  # Create folders
+  install -d "${pkgdir}/etc/default"
+  install -d "${pkgdir}/usr/share/doc/${pkgname}"
+  install -d "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  # Copy files
+  install -m644 README.md    "${pkgdir}/usr/share/doc/${pkgname}/README"
+  install -Dm 644 COPYING    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -m644 "grub-sl"    "${pkgdir}/etc/default/grub-sl"
+}
+

@@ -1,0 +1,13 @@
+post_install() {
+   echo "Installing Snuglinux grub config file"
+   rename "/etc/default/grub" "/etc/default/grub-arch"
+   cp -f "/etc/default/grub-sl" "/etc/default/grub"
+   grub-mkconfig -o /boot/grub/grub.cfg
+}
+
+post_remove() {
+   echo "Removing Snuglinux grub config file"
+   rename "/etc/default/grub" "/etc/default/grub-sl"
+   cp -f "/etc/default/grub-arch" "/etc/default/grub"
+   grub-mkconfig -o /boot/grub/grub.cfg
+}
