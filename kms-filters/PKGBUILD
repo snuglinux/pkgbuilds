@@ -1,12 +1,12 @@
 pkgname=kms-filters
-pkgver=6.13.0
-pkgrel=2
+pkgver=6.16.0
+pkgrel=1
 pkgdesc="Kurento server AV filters"
 arch=(any)
 url="https://github.com/Kurento/kms-filters"
 license=(apache)
-depends=(kms-core kms-elements opencv3-opt)
-makedepends=(kms-cmake-utils kurento-module-creator)
+depends=(kms-core=$pkgver kms-elements=$pkgver opencv3-opt)
+makedepends=(kms-cmake-utils=$pkgver kurento-module-creator=$pkgver)
 source=(
     "git://github.com/Kurento/$pkgname.git#tag=$pkgver"
     cmake-opencv.patch
