@@ -1,20 +1,29 @@
 pkgbase = kurento-media-server
 	pkgdesc = Kurento WebRTC media server
-	pkgver = 6.13.0
+	pkgver = 6.16.0
 	pkgrel = 1
 	url = https://github.com/Kurento/kurento-media-server
-	arch = any
+	arch = x86_64
 	license = apache
 	makedepends = kms-cmake-utils
+	makedepends = libevent
 	makedepends = websocketpp
-	depends = kms-core
+	makedepends = cmake
+	makedepends = kms-cmake-utils=6.16.0
+	makedepends = kms-core=6.16.0
+	makedepends = kurento-module-creator=6.16.0
+	makedepends = gstreamer
+	depends = kms-core=6.16.0
 	depends = boost
-	optdepends = kms-elements
-	optdepends = kms-filters
-	source = git://github.com/Kurento/kurento-media-server.git#tag=6.13.0
+	optdepends = kms-elements=6.16.0
+	optdepends = kms-filters=6.16.0
+	backup = etc/kurento/kurento.conf.json
+	backup = etc/kurento/sdp_pattern.txt
+	source = https://github.com/Kurento/kurento-media-server/archive/6.16.0.tar.gz
 	source = cmake-boost.patch
-	sha256sums = SKIP
-	sha256sums = SKIP
+	source = kurento-media-server.service
+	sha256sums = b70b27067e6b6d397f424f8e366f65fe934601a5b5ff2721c4a12a9324affa1c
+	sha256sums = f93293f32ecc280892511e094928b585cd6d53ac5123b55cb8c3875453026259
+	sha256sums = 126de30777996a02c2b4131555c15273735aa43eb579dedeed7957f597fdac72
 
 pkgname = kurento-media-server
-

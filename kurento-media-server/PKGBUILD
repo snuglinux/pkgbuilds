@@ -1,48 +1,45 @@
 pkgname=kurento-media-server
-pkgver=6.12.0
-pkgrel=2
+pkgver=6.16.0
+pkgrel=1
 pkgdesc="Kurento WebRTC media server"
-arch=('x86_64')
+arch=(x86_64)
 url="https://github.com/Kurento/kurento-media-server"
 license=('apache')
-depends=(kms-core boost)
-optdepends=(kms-elements kms-filters)
-makedepends=(kms-cmake-utils "websocketpp>=0.8.2")
-source=(
-    "https://github.com/Kurento/kurento-media-server/archive/$pkgver.tar.gz"
-    cmake-boost.patch
-    kurento-media-server.service
-)
+depends=("kms-core=${pkgver}" boost)
+optdepends=("kms-elements=${pkgver}" "kms-filters=${pkgver}")
+makedepends=("kms-cmake-utils=${pkgver}" "libevent" "websocketpp" "cmake" "kms-cmake-utils=${pkgver}" "kms-core=${pkgver}" "kurento-module-creator=${pkgver}" "gstreamer" )
+source=("https://github.com/Kurento/kurento-media-server/archive/${pkgver}.tar.gz"
+        "cmake-boost.patch"
+        "kurento-media-server.service")
 
-sha256sums=('3253b6db009c94a0b993a9ee63d5b6d7b7c38a8044162b2721a1c9a0fc446ddb'
-             'f93293f32ecc280892511e094928b585cd6d53ac5123b55cb8c3875453026259'
-             '126de30777996a02c2b4131555c15273735aa43eb579dedeed7957f597fdac72')
+sha256sums=('b70b27067e6b6d397f424f8e366f65fe934601a5b5ff2721c4a12a9324affa1c'
+            'f93293f32ecc280892511e094928b585cd6d53ac5123b55cb8c3875453026259'
+            '126de30777996a02c2b4131555c15273735aa43eb579dedeed7957f597fdac72')
 
-backup=(
-    etc/kurento/kurento.conf.json
-    etc/kurento/sdp_pattern.txt
-)
+backup=(etc/kurento/kurento.conf.json
+        etc/kurento/sdp_pattern.txt)
 
 prepare() {
-    cd "$srcdir/$pkgname-$pkgver"
-    patch -p0 <"$srcdir/cmake-boost.patch"
+    cd "${srcdir}/${pkgname}-${pkgver}"
+    patch -p0 <"${srcdir}/cmake-boost.patch"
     sed -ri -e 's#gstreamer((-[-a-z]+)?)-1\.5#gstreamer\1-1.0#g' CMakeLists.txt
-    rm -r server/transport/websocket/websocketpp
-    ln -s /usr/include/websocketpp server/transport/websocket/websocketpp
+    sed -i -e 's|find_package(websocketpp 0.7.0 REQUIRED)|find_package(websocketpp 0.8.2 REQUIRED)|g' server/transport/websocket/CMakeLists.txt
+    #rm -r server/transport/websocket/websocketpp
+    ln -sf /usr/include/websocketpp server/transport/websocket/websocketpp
 }
 
 build() {
-    local builddir=$srcdir/$pkgname-$pkgver/build
-    rm -rf "$builddir"
-    mkdir "$builddir"
-    cd "$builddir"
+    local builddir=${srcdir}/${pkgname}-${pkgver}/build
+    rm -rf "${builddir}"
+    mkdir "${builddir}"
+    cd "${builddir}"
     cmake -DCMAKE_MODULE_PATH=/usr/share/cmake/Modules -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_SYSCONFDIR=/etc -DCMAKE_BUILD_TYPE=Release ..
     make
 }
 
 package() {
-    local builddir=$srcdir/$pkgname-$pkgver/build
-    cd "$builddir"
+    local builddir=$srcdir/${pkgname}-${pkgver}/build
+    cd "${builddir}"
     make install DESTDIR="$pkgdir"
     install -dm755 ${pkgdir}/usr/lib/systemd/system
     install -Dpm644 "${srcdir}/kurento-media-server.service" -t "${pkgdir}/usr/lib/systemd/system/"
