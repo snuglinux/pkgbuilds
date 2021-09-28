@@ -7,14 +7,15 @@ pkgbase = kms-core
 	license = apache
 	makedepends = kms-cmake-utils
 	makedepends = kurento-module-creator
-	makedepends = kms-jsonrpc
+	makedepends = kms-jsoncpp
+	makedepends = kms-jsonrpc=6.16.0
 	depends = boost
 	depends = libsigc++
 	depends = glibmm
 	depends = gstreamer
 	depends = gst-plugins-base
 	depends = kms-jsoncpp
-	depends = kms-jsonrpc
+	depends = kms-jsonrpc=6.16.0
 	source = git://github.com/Kurento/kms-core.git#tag=6.16.0
 	source = cmake-boost.patch
 	source = kmscore.c.patch
@@ -23,4 +24,3 @@ pkgbase = kms-core
 	sha256sums = SKIP
 
 pkgname = kms-core
-
