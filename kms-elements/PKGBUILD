@@ -1,12 +1,12 @@
 pkgname=kms-elements
-pkgver=6.13.0
+pkgver=6.16.0
 pkgrel=1
 pkgdesc="Kurento server media elements"
 arch=(any)
 url="https://github.com/Kurento/kms-elements"
 license=(apache)
-depends=(boost kms-core libnice gstreamer gst-plugins-base gst-plugins-bad)
-makedepends=(kms-cmake-utils kurento-module-creator)
+depends=(boost kms-core=$pkgver libnice gstreamer gst-plugins-base gst-plugins-bad)
+makedepends=(cmake kms-cmake-utils=$pkgver kurento-module-creator=$pkgver)
 source=(
     "git://github.com/Kurento/$pkgname.git#tag=$pkgver"
     cmake-boost.patch
