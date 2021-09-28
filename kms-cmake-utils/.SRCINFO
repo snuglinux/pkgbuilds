@@ -9,4 +9,3 @@ pkgbase = kms-cmake-utils
 	sha256sums = SKIP
 
 pkgname = kms-cmake-utils
-
