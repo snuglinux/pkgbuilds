@@ -9,4 +9,3 @@ pkgbase = kms-jsoncpp
 	sha256sums = SKIP
 
 pkgname = kms-jsoncpp
-
