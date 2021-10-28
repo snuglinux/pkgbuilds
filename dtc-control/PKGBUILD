@@ -1,0 +1,25 @@
+pkgname=dtc-control
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="dtc-control - Helper utilities for managing dtc files"
+arch=('any')
+url="https://github.com/snuglinux/${pkgname}"
+license=('GPL2')
+depends=("bash" "dtc" "libnewt")
+source=("https://github.com/snuglinux/${pkgname}/archive/${pkgver}.tar.gz")
+md5sums=('cb2ddc24d62ed4a53d253d520ab139f4')
+
+package(){
+  cd "$srcdir/${pkgname}-${pkgver}"
+
+  # Create folders
+  install -d "${pkgdir}/usr/bin"
+  install -d "${pkgdir}/usr/share/doc/${pkgname}"
+  install -d "${pkgdir}/usr/share/licenses/${pkgname}"
+
+  # Copy files
+  install -m754 dtc-status     "${pkgdir}/usr/bin"
+  install -m644 README.md      "${pkgdir}/usr/share/doc/${pkgname}/README"
+  install -Dm 644 COPYING      "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
+
