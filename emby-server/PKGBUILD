@@ -53,9 +53,11 @@ if [ ${CARCH} == 'x86_64' ]; then
    optdepends=('intel-media-sdk: Intel QuickSync support (requires Emby Premiere)'
                'nvidia-utils: Nvidia NVDEC/NVENC support (requires Emby Premiere)')
    ffdetect="https://mediabrowser.github.io/embytools/ffdetect-${_ffmpeg_ver}-x64.tar.xz"
+   b2sum_ffdetect='c3c4935a704a2bcd83f33138d2140a1964ce8ceb3249cc9b4339c821d8954d10c8c0ebe56e9a5eddf5bcdcf046a41b17e779ab5a015846307f7cf631d1ffc605'
 elif [ ${CARCH} == 'armv7h' ]; then
    optdepends=()
-   ffdetect="ffdetect-armv7h"
+   ffdetect=""
+   b2sum_ffdetect=""
 fi
 
 source=(
@@ -73,7 +75,7 @@ backup=(etc/conf.d/emby-server)
 install=emby-server.install
 b2sums=('082b675b3da8c44a914517ce7625f79d5a9388b2b99ce81f536e79526ba596cb6a7096ebb92352a8002c3dcd362c388448bd13bc64cc6efbe9524312b17427c1'
         '089ffcc7c51231c6caceaceb871d54edfb8d453f5b5515ef6a32969eac7c3609ea0e3b14925b6d1af5ce0157c442c904433fcf3b9ca5d45c7736402e6fa54cc3'
-        'SKIP'
+        $b2sum_ffdetect
         '48c11601d00121e725951fd48ba34137804d4a67aa12528a29ca4d43d301d19311182421e96bef7b7ddbc4929dc9d5b577b1659cb0b716b1c1f6938283465c46'
         '49c2e6a27f36a2e44a6b988573ee7d08bacb036008f5360ad1cb617b3d1577bdcd48a323ebb882e0f9ec4483962a96d8bd9af44385feb5245b49dfc191d73352'
         '11cc26f44f81823bcd50ee16344aff94eb0a64d740a2e489d832bc8d48d11f3065bf683da243409bab8e3d8a201083596a27983cc11a90688128442e0116430c'
@@ -137,13 +139,16 @@ package() {
   install -Dm 755 emby-server -t "${pkgdir}"/usr/bin/
   if [ ${CARCH} == 'x86_64' ]; then
      install -Dm 755 bin/ffdetect "${pkgdir}"/usr/bin/ffdetect-emby
-  elif [ ${CARCH} == 'armv7h' ]; then
-     install -Dm 755 ffdetect-armv7h "${pkgdir}"/usr/bin/ffdetect-emby
   fi
   install -Dm 755 ffmpeg-${_ffmpeg_ver}_public/ffmpeg "${pkgdir}"/usr/bin/ffmpeg-emby
   install -Dm 755 ffmpeg-${_ffmpeg_ver}_public/ffprobe "${pkgdir}"/usr/bin/ffprobe-emby
   install -Dm 644 emby-server.service -t "${pkgdir}"/usr/lib/systemd/system/
   install -Dm 644 emby-server.conf "${pkgdir}"/etc/conf.d/emby-server
+
+  if [ ${CARCH} == 'armv7h' ]; then
+     sed '/FFDETECT/d' -i "${pkgdir}"/etc/conf.d/emby-server "${pkgdir}"/usr/bin/emby-server
+  fi
+
   install -Dm 644 license.docx -t "${pkgdir}"/usr/share/licenses/emby-server/
 }
 
