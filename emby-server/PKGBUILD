@@ -1,0 +1,150 @@
+# Maintainer: Maxime Gauduin <alucryd@archlinux.org>
+# Contributor: Daniel Seymour <dannyseeless@gmail.com>
+
+pkgname=emby-server
+pkgver=4.6.6.0
+_ffmpeg_ver=2021_02_27
+pkgrel=1
+pkgdesc='Bring together your videos, music, photos, and live television'
+arch=(x86_64 armv7h)
+url=https://emby.media
+license=(custom)
+
+if [ ${CARCH} == 'x86_64' ]; then
+  depends_add=('libmfx' 'skia-sharp' 'dotnet-runtime-3.1' 'dotnet-host')
+elif [ ${CARCH} == 'armv7h' ]; then
+  depends_add=('dotnet-runtime-3.1-bin' 'dotnet-host-bin')
+fi
+
+depends=(
+  'alsa-lib'
+  'aom'
+  'bzip2'
+  'expat'
+  'fontconfig'
+  'fribidi'
+  'glibc'
+  'gmp'
+  'gnutls'
+  'lame'
+  'libass.so'
+  'libdav1d.so'
+  'libdrm'
+  'libfreetype.so'
+  'libjpeg-turbo'
+  'libpng'
+  'libtheora'
+  'libva'
+  'libvorbisenc.so'
+  'libvorbis.so'
+  'libwebp'
+  'libx264.so'
+  'opus'
+  'sqlite'
+  'zlib'
+  'zvbi'
+  $depends_add
+)
+makedepends=(
+  'ffnvcodec-headers8.1'
+  'nasm'
+)
+if [ ${CARCH} == 'x86_64' ]; then
+   optdepends=('intel-media-sdk: Intel QuickSync support (requires Emby Premiere)'
+               'nvidia-utils: Nvidia NVDEC/NVENC support (requires Emby Premiere)')
+   ffdetect="https://mediabrowser.github.io/embytools/ffdetect-${_ffmpeg_ver}-x64.tar.xz"
+elif [ ${CARCH} == 'armv7h' ]; then
+   optdepends=()
+   ffdetect="ffdetect-armv7h"
+fi
+
+source=(
+  https://github.com/MediaBrowser/Emby.Releases/releases/download/${pkgver}/embyserver-netcore_${pkgver}.zip
+  https://mediabrowser.github.io/embytools/ffmpeg-${_ffmpeg_ver}.tar.gz
+  ${ffdetect}
+  emby-server
+  emby-server.conf
+  emby-server.service
+  license.docx
+  Permission_to_distribute.mbox
+)
+noextract=(license.docx)
+backup=(etc/conf.d/emby-server)
+install=emby-server.install
+b2sums=('082b675b3da8c44a914517ce7625f79d5a9388b2b99ce81f536e79526ba596cb6a7096ebb92352a8002c3dcd362c388448bd13bc64cc6efbe9524312b17427c1'
+        '089ffcc7c51231c6caceaceb871d54edfb8d453f5b5515ef6a32969eac7c3609ea0e3b14925b6d1af5ce0157c442c904433fcf3b9ca5d45c7736402e6fa54cc3'
+        'SKIP'
+        '48c11601d00121e725951fd48ba34137804d4a67aa12528a29ca4d43d301d19311182421e96bef7b7ddbc4929dc9d5b577b1659cb0b716b1c1f6938283465c46'
+        '49c2e6a27f36a2e44a6b988573ee7d08bacb036008f5360ad1cb617b3d1577bdcd48a323ebb882e0f9ec4483962a96d8bd9af44385feb5245b49dfc191d73352'
+        '11cc26f44f81823bcd50ee16344aff94eb0a64d740a2e489d832bc8d48d11f3065bf683da243409bab8e3d8a201083596a27983cc11a90688128442e0116430c'
+        'e490c2ec7aff3deb9874a80345273c2aa435624b914a13fe8cba8f07ee44938699a024d0c6784fe68820d3a848cccf5af3f7120c7906356ed17d306fc31b6490'
+        '61ca54af95278f498b21b424b4d4bae98660b4b7898bfd9752fe21da20d7c508502014bc1970a60920f3064ca20b31b46ba2a788b3b1371f75b5278add70ffc4')
+
+prepare() {
+  rm -rf system/{electron,runtimes/{osx,tizen*,win*}}
+}
+
+build() {
+  cd ffmpeg-${_ffmpeg_ver}_public
+
+  export PKG_CONFIG_PATH=/usr/lib/ffnvcodec8.1/pkgconfig
+
+  if [ ${CARCH} == 'x86_64' ]; then
+     configure_add=" --enable-libmfx
+                     --enable-nvdec
+                     --enable-nvenc"
+  elif [ ${CARCH} == 'armv7h' ]; then
+     configure_add=""
+  fi
+
+  ./configure \
+    --disable-doc \
+    --disable-ffplay \
+    --disable-shared \
+    --disable-vdpau \
+    --disable-libxcb \
+    --disable-lzma \
+    --disable-sdl2 \
+    --disable-xlib \
+    --enable-fontconfig \
+    --enable-gmp \
+    --enable-gnutls \
+    --enable-gpl \
+    --enable-libaom \
+    --enable-libass \
+    --enable-libdav1d \
+    --enable-libdrm \
+    --enable-libfreetype \
+    --enable-libfribidi \
+    --enable-libmp3lame \
+    --enable-libopus \
+    --enable-libtheora \
+    --enable-libvorbis \
+    --enable-libwebp \
+    --enable-libx264 \
+    --enable-libzvbi \
+    --enable-version3 \
+    --enable-static \
+    --enable-vaapi \
+    $configure_add
+  make
+}
+
+package() {
+  install -dm 755 "${pkgdir}"/usr/lib
+  cp -dr --no-preserve='ownership' system "${pkgdir}"/usr/lib/emby-server
+  ln -s ../libSkiaSharp.so.80.2.0 "${pkgdir}"/usr/lib/emby-server/libSkiaSharp.so
+  install -Dm 755 emby-server -t "${pkgdir}"/usr/bin/
+  if [ ${CARCH} == 'x86_64' ]; then
+     install -Dm 755 bin/ffdetect "${pkgdir}"/usr/bin/ffdetect-emby
+  elif [ ${CARCH} == 'armv7h' ]; then
+     install -Dm 755 ffdetect-armv7h "${pkgdir}"/usr/bin/ffdetect-emby
+  fi
+  install -Dm 755 ffmpeg-${_ffmpeg_ver}_public/ffmpeg "${pkgdir}"/usr/bin/ffmpeg-emby
+  install -Dm 755 ffmpeg-${_ffmpeg_ver}_public/ffprobe "${pkgdir}"/usr/bin/ffprobe-emby
+  install -Dm 644 emby-server.service -t "${pkgdir}"/usr/lib/systemd/system/
+  install -Dm 644 emby-server.conf "${pkgdir}"/etc/conf.d/emby-server
+  install -Dm 644 license.docx -t "${pkgdir}"/usr/share/licenses/emby-server/
+}
+
+# vim: ts=2 sw=2 et:
