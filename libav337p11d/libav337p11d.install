@@ -9,6 +9,6 @@ post_upgrade() {
    systemctl restart pcscd
 }
 
-post_remove() {
-   systemctl restart pcscd
+pre_remove() {
+   systemctl disable pcscd
 }
