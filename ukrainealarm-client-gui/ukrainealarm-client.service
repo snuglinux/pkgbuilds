@@ -1,0 +1,9 @@
+Description=Ukrainealarm client
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ukrainealarm-client
+Restart=always
+
+[Install]
+WantedBy=default.target
